@@ -1,0 +1,17 @@
+{
+  "name": "morning-brief-bot",
+  "version": "1.0.0",
+  "description": "Morning Brief Telegram bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "dotenv": "^17.2.4",
+    "node-telegram-bot-api": "^0.67.0"
+  }
+}

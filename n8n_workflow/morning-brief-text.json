@@ -1,0 +1,599 @@
+{
+  "name": "Morning Brief — Text MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "a0000001-0001-0001-0001-000000000001",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [-800, 400],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "morning-brief-trigger",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a0000001-0001-0001-0001-000000000002",
+      "name": "Webhook (Test)",
+      "type": "n8n-nodes-base.webhook",
+      "position": [-800, 600],
+      "typeVersion": 2,
+      "webhookId": "morning-brief-trigger"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://localhost:3000/api/n8n/users/due",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {}
+      },
+      "id": "a0000001-0001-0001-0001-000000000003",
+      "name": "Get Due Users",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [-520, 400],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HEADER_AUTH_CREDENTIAL",
+          "name": "Morning Brief API Key"
+        }
+      },
+      "notesInFlow": true,
+      "notes": "⚠️ After import: 1) Create an HTTP Header Auth credential with Name=X-API-Key, Value=your N8N_API_KEY from .env. 2) Select it here. 3) Update the URL if backend runs on a different host/port."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-has-users",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a0000001-0001-0001-0001-000000000004",
+      "name": "Has Users?",
+      "type": "n8n-nodes-base.if",
+      "position": [-280, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Split the users array into individual items for the loop\nconst users = $input.first().json.users;\nreturn users.map(u => ({ json: u }));"
+      },
+      "id": "a0000001-0001-0001-0001-000000000005",
+      "name": "Extract Users",
+      "type": "n8n-nodes-base.code",
+      "position": [-40, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        },
+        "batchSize": 1
+      },
+      "id": "a0000001-0001-0001-0001-000000000006",
+      "name": "Loop Over Users",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [200, 400],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-userId",
+              "name": "userId",
+              "type": "number",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "id": "set-telegramId",
+              "name": "telegramId",
+              "type": "number",
+              "value": "={{ $json.telegramId }}"
+            },
+            {
+              "id": "set-telegramName",
+              "name": "telegramName",
+              "type": "string",
+              "value": "={{ $json.telegramName }}"
+            },
+            {
+              "id": "set-city",
+              "name": "city",
+              "type": "string",
+              "value": "={{ $json.city }}"
+            },
+            {
+              "id": "set-lat",
+              "name": "lat",
+              "type": "number",
+              "value": "={{ $json.lat }}"
+            },
+            {
+              "id": "set-lon",
+              "name": "lon",
+              "type": "number",
+              "value": "={{ $json.lon }}"
+            },
+            {
+              "id": "set-timezone",
+              "name": "timezone",
+              "type": "string",
+              "value": "={{ $json.timezone }}"
+            },
+            {
+              "id": "set-sendTime",
+              "name": "sendTime",
+              "type": "string",
+              "value": "={{ $json.sendTime }}"
+            },
+            {
+              "id": "set-hasCalendar",
+              "name": "hasCalendar",
+              "type": "boolean",
+              "value": "={{ $json.hasCalendar }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a0000001-0001-0001-0001-000000000007",
+      "name": "User Config",
+      "type": "n8n-nodes-base.set",
+      "position": [440, 400],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://api.openweathermap.org/data/2.5/forecast?lat={{ $('User Config').first().json.lat }}&lon={{ $('User Config').first().json.lon }}&units=metric&cnt=5&lang=ru",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpQueryAuth",
+        "options": {}
+      },
+      "id": "a0000001-0001-0001-0001-000000000008",
+      "name": "Get Weather",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [720, 200],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "jsQp3o3c6bbBjSGa",
+          "name": "Openweathermap"
+        }
+      },
+      "notesInFlow": true,
+      "notes": "Uses existing OpenWeatherMap credential (httpQueryAuth appends appid). After import, re-select 'Openweathermap' credential if needed."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format weather data into a readable summary\nconst weather = $input.first().json;\nconst city = $('User Config').first().json.city;\n\nconst current = weather.list?.[0];\nconst later = weather.list?.[2]; // ~6h later\n\nif (!current) {\n  return [{ json: { weatherText: 'Нет данных о погоде.' } }];\n}\n\nconst temp = Math.round(current.main.temp);\nconst feelsLike = Math.round(current.main.feels_like);\nconst desc = current.weather[0].description;\nconst wind = Math.round(current.wind.speed);\nconst humidity = current.main.humidity;\n\nlet laterTemp = '';\nif (later) {\n  laterTemp = `Позже до ${Math.round(later.main.temp)}°C.`;\n}\n\nconst weatherText = `Сейчас ${temp}°C (ощущается ${feelsLike}°C), ${desc}. ${laterTemp}\\nВетер ${wind} м/с, влажность ${humidity}%.`;\n\nreturn [{ json: { weatherText, city } }];"
+      },
+      "id": "a0000001-0001-0001-0001-000000000009",
+      "name": "Format Weather",
+      "type": "n8n-nodes-base.code",
+      "position": [960, 200],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://news.google.com/rss/search?q={{ encodeURIComponent($('User Config').first().json.city) }}&hl=ru-RU&gl=RU&ceid=RU:ru",
+        "authentication": "none",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "a0000001-0001-0001-0001-000000000010",
+      "name": "Get News RSS",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [720, 400],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse RSS XML and filter to last 24 hours, limit 5 headlines\nconst xml = $input.first().json.data || $input.first().json.body || $input.first().json;\nlet text = '';\nif (typeof xml === 'string') {\n  text = xml;\n} else if (xml.data) {\n  text = xml.data;\n} else {\n  text = JSON.stringify(xml);\n}\n\n// Simple XML parsing for RSS items\nconst items = [];\nconst itemRegex = /<item>(.*?)<\\/item>/gs;\nlet match;\nwhile ((match = itemRegex.exec(text)) !== null) {\n  const itemXml = match[1];\n  \n  const titleMatch = itemXml.match(/<title>(.*?)<\\/title>/);\n  const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\\/pubDate>/);\n  const sourceMatch = itemXml.match(/<source[^>]*>(.*?)<\\/source>/);\n  \n  if (titleMatch) {\n    const title = titleMatch[1].replace(/<!\\[CDATA\\[(.*?)\\]\\]>/g, '$1').trim();\n    const pubDate = pubDateMatch ? new Date(pubDateMatch[1]) : null;\n    const source = sourceMatch ? sourceMatch[1].replace(/<!\\[CDATA\\[(.*?)\\]\\]>/g, '$1').trim() : '';\n    \n    items.push({ title, pubDate, source });\n  }\n}\n\n// Filter to last 24 hours\nconst now = new Date();\nconst oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\nconst recentItems = items.filter(item => {\n  if (!item.pubDate) return true; // include items without date\n  return item.pubDate >= oneDayAgo;\n});\n\n// Take top 5\nconst top5 = recentItems.slice(0, 5);\n\nconst headlines = top5.map(item => {\n  const src = item.source ? ` (${item.source})` : '';\n  return `• ${item.title}${src}`;\n}).join('\\n');\n\nconst newsText = top5.length > 0 ? headlines : 'Нет свежих новостей.';\n\nreturn [{ json: { newsText, newsCount: top5.length } }];"
+      },
+      "id": "a0000001-0001-0001-0001-000000000011",
+      "name": "Parse & Filter News",
+      "type": "n8n-nodes-base.code",
+      "position": [960, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Random motivational quote in Russian\nconst quotes = [\n  { text: 'Лучший способ предсказать будущее — создать его.', author: 'Питер Друкер' },\n  { text: 'Начните делать то, что необходимо, затем — то, что возможно, и вдруг вы уже делаете невозможное.', author: 'Франциск Ассизский' },\n  { text: 'Успех — это способность идти от неудачи к неудаче, не теряя энтузиазма.', author: 'Уинстон Черчилль' },\n  { text: 'Единственный способ делать великие дела — любить то, что делаешь.', author: 'Стив Джобс' },\n  { text: 'Каждое великое свершение начинается с решения попробовать.', author: 'Неизвестный автор' },\n  { text: 'Не ждите. Время никогда не будет подходящим.', author: 'Наполеон Хилл' },\n  { text: 'Ваше время ограничено. Не тратьте его, живя чужой жизнью.', author: 'Стив Джобс' },\n  { text: 'Трудности готовят обычных людей к необыкновенным судьбам.', author: 'К.С. Льюис' },\n  { text: 'Действие — основной ключ к успеху.', author: 'Пабло Пикассо' },\n  { text: 'Мы то, что мы делаем постоянно. Совершенство — не действие, а привычка.', author: 'Аристотель' },\n  { text: 'Верьте, что вы можете, и вы уже на полпути.', author: 'Теодор Рузвельт' },\n  { text: 'Не бойтесь отказываться от хорошего в пользу великого.', author: 'Джон Рокфеллер' },\n  { text: 'Будущее принадлежит тем, кто верит в красоту своих мечтаний.', author: 'Элеонора Рузвельт' },\n  { text: 'Путешествие в тысячу миль начинается с одного шага.', author: 'Лао-цзы' },\n  { text: 'Что бы вы ни думали, что вы можете или не можете, вы правы.', author: 'Генри Форд' },\n  { text: 'Падай семь раз, вставай восемь.', author: 'Японская пословица' },\n  { text: 'Жизнь — это то, что с тобой происходит, пока ты строишь другие планы.', author: 'Джон Леннон' },\n  { text: 'Образование — самое мощное оружие для изменения мира.', author: 'Нельсон Мандела' },\n  { text: 'Дисциплина — это мост между целями и достижениями.', author: 'Джим Рон' },\n  { text: 'Не считайте дни, делайте так, чтобы дни считались.', author: 'Мухаммед Али' },\n  { text: 'Ошибки — это доказательство того, что вы пытаетесь.', author: 'Неизвестный автор' },\n  { text: 'Сила не в том, чтобы никогда не падать, а в том, чтобы подниматься каждый раз.', author: 'Конфуций' },\n  { text: 'Лучшая месть — огромный успех.', author: 'Фрэнк Синатра' },\n  { text: 'Быть собой — это единственная борьба, которая стоит усилий.', author: 'Э.Э. Каммингс' },\n  { text: 'Сложные дороги часто ведут к прекрасным местам.', author: 'Неизвестный автор' },\n  { text: 'Не позволяйте вчерашнему дню занимать слишком много сегодняшнего.', author: 'Уилл Роджерс' },\n  { text: 'Знание — это сила.', author: 'Фрэнсис Бэкон' },\n  { text: 'Возможности не возникают. Вы их создаёте.', author: 'Крис Гроссер' },\n  { text: 'Творчество — это интеллект, который развлекается.', author: 'Альберт Эйнштейн' },\n  { text: 'Качество — это не действие, а привычка.', author: 'Аристотель' },\n  { text: 'Маленькие шаги каждый день дают большие результаты.', author: 'Неизвестный автор' },\n  { text: 'Простота — высшая форма утончённости.', author: 'Леонардо да Винчи' },\n  { text: 'Тот, кто двигает горы, начинает с маленьких камней.', author: 'Конфуций' },\n  { text: 'Инвестиции в знания приносят лучшие дивиденды.', author: 'Бенджамин Франклин' },\n  { text: 'Если вы хотите чего-то, чего никогда не имели, делайте то, чего никогда не делали.', author: 'Томас Джефферсон' },\n  { text: 'Будь тем изменением, которое хочешь видеть в мире.', author: 'Махатма Ганди' },\n  { text: 'Победа — это не главное. Главное — это стремление к победе.', author: 'Винс Ломбарди' },\n  { text: 'Невозможно — это мнение, а не факт.', author: 'Мухаммед Али' },\n  { text: 'Каждый мастер когда-то был учеником.', author: 'Неизвестный автор' },\n  { text: 'Учиться — всё равно что грести против течения: стоит только остановиться — и тебя несёт назад.', author: 'Бенджамин Бриттен' },\n  { text: 'Мечтай так, будто будешь жить вечно. Живи так, будто умрёшь сегодня.', author: 'Джеймс Дин' },\n  { text: 'Счастье — это не станция, куда приезжаешь, а стиль путешествия.', author: 'Маргарет Ли Ранбек' },\n  { text: 'Делай что можешь, с тем что имеешь, там где ты есть.', author: 'Теодор Рузвельт' },\n  { text: 'Не бывает больших дел без больших трудностей.', author: 'Вольтер' },\n  { text: 'Люди забудут, что вы сказали. Люди забудут, что вы сделали. Но они никогда не забудут, что вы заставили их почувствовать.', author: 'Майя Энджелоу' },\n  { text: 'Жизнь начинается в конце зоны комфорта.', author: 'Нил Дональд Уолш' },\n  { text: 'Успех — это сумма маленьких усилий, повторяемых день за днём.', author: 'Роберт Кольер' },\n  { text: 'Один цветок не делает весны, но каждая весна начинается с одного цветка.', author: 'Неизвестный автор' },\n  { text: 'Будь сильнее своих оправданий.', author: 'Неизвестный автор' },\n  { text: 'Великие умы обсуждают идеи. Средние умы обсуждают события. Мелкие умы обсуждают людей.', author: 'Элеонора Рузвельт' }\n];\n\nconst randomIndex = Math.floor(Math.random() * quotes.length);\nconst quote = quotes[randomIndex];\n\nreturn [{ json: { quoteText: quote.text, quoteAuthor: quote.author } }];"
+      },
+      "id": "a0000001-0001-0001-0001-000000000012",
+      "name": "Get Quote",
+      "type": "n8n-nodes-base.code",
+      "position": [720, 600],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "a0000001-0001-0001-0001-000000000013",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [1200, 400],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combine all data into a single prompt for the AI\nconst items = $input.all();\nconst weather = items.find(i => i.json.weatherText) || { json: { weatherText: 'Нет данных.', city: '' } };\nconst news = items.find(i => i.json.newsText) || { json: { newsText: 'Нет новостей.' } };\nconst quote = items.find(i => i.json.quoteText) || { json: { quoteText: 'Действуй!', quoteAuthor: '' } };\n\nconst userConfig = $('User Config').first().json;\n\n// Get current time in user's timezone\nconst now = new Date();\nlet userTimeStr = '';\ntry {\n  userTimeStr = now.toLocaleTimeString('ru-RU', {\n    timeZone: userConfig.timezone,\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false\n  });\n} catch(e) {\n  userTimeStr = userConfig.sendTime || '07:00';\n}\n\nreturn [{\n  json: {\n    telegramId: userConfig.telegramId,\n    telegramName: userConfig.telegramName,\n    userId: userConfig.userId,\n    city: userConfig.city || weather.json.city,\n    timezone: userConfig.timezone,\n    userTime: userTimeStr,\n    weatherText: weather.json.weatherText,\n    newsText: news.json.newsText,\n    quoteText: quote.json.quoteText,\n    quoteAuthor: quote.json.quoteAuthor\n  }\n}];"
+      },
+      "id": "a0000001-0001-0001-0001-000000000014",
+      "name": "Prepare Brief Data",
+      "type": "n8n-nodes-base.code",
+      "position": [1440, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Составь утренний брифинг для пользователя на основе этих данных:\n\nИмя: {{ $json.telegramName }}\nГород: {{ $json.city }}\nВремя: {{ $json.userTime }}\n\nПОГОДА:\n{{ $json.weatherText }}\n\nНОВОСТИ:\n{{ $json.newsText }}\n\nЦИТАТА:\n«{{ $json.quoteText }}» — {{ $json.quoteAuthor }}",
+        "options": {
+          "systemMessage": "Ты составляешь утренний брифинг в виде Telegram-сообщения. Формат: HTML разметка для Telegram (используй <b>, <i>, но НЕ используй <h1>, <p>, <div> — только инлайн-теги).\n\nСтрого следуй этому шаблону:\n\n<b>Доброе утро, {имя}!</b>\n📍 {город} • {время}\n\n🌤 <b>Погода</b>\n{погода — 2-3 строки, кратко}\n\n📰 <b>Новости</b>\n{список новостей — перечисли буллетами •}\n\n💬 <b>Мысль дня</b>\n«{цитата}»\n— {автор}\n\nПравила:\n- Пиши ТОЛЬКО на русском языке\n- Будь краток и дружелюбен\n- Не добавляй ничего лишнего — только погоду, новости и цитату\n- Не используй Markdown — только HTML-теги для Telegram\n- НЕ оборачивай ответ в кодовый блок или ```\n- Верни ТОЛЬКО готовое сообщение, без объяснений"
+        }
+      },
+      "id": "a0000001-0001-0001-0001-000000000015",
+      "name": "Format Brief (AI)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [1680, 400],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "a0000001-0001-0001-0001-000000000016",
+      "name": "Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [1600, 620],
+      "typeVersion": 1,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "5FfS2aB9vuUkugT3",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Prepare Brief Data').first().json.telegramId }}",
+        "text": "={{ $json.output || $json.text }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "a0000001-0001-0001-0001-000000000017",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1960, 400],
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "EYuMJ69CdV2OyDSD",
+          "name": "Short Video Generation"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://localhost:3000/api/n8n/users/{{ $('Prepare Brief Data').first().json.userId }}/brief-sent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "a0000001-0001-0001-0001-000000000018",
+      "name": "Mark Brief Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2200, 400],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HEADER_AUTH_CREDENTIAL",
+          "name": "Morning Brief API Key"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "a0000001-0001-0001-0001-000000000019",
+      "name": "No Users",
+      "type": "n8n-nodes-base.noOp",
+      "position": [-280, 620],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return a simple response for the webhook test trigger\nreturn [{ json: { ok: true, message: 'Brief workflow completed' } }];"
+      },
+      "id": "a0000001-0001-0001-0001-000000000020",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.code",
+      "position": [2440, 400],
+      "typeVersion": 2
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Due Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook (Test)": {
+      "main": [
+        [
+          {
+            "node": "Get Due Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Due Users": {
+      "main": [
+        [
+          {
+            "node": "Has Users?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Users?": {
+      "main": [
+        [
+          {
+            "node": "Extract Users",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Users": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Users": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "User Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Config": {
+      "main": [
+        [
+          {
+            "node": "Get Weather",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get News RSS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Quote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weather": {
+      "main": [
+        [
+          {
+            "node": "Format Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Weather": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get News RSS": {
+      "main": [
+        [
+          {
+            "node": "Parse & Filter News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse & Filter News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Quote": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Prepare Brief Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Brief Data": {
+      "main": [
+        [
+          {
+            "node": "Format Brief (AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Brief (AI)": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Format Brief (AI)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Mark Brief Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Brief Sent": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Moscow",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "pinData": {}
+}

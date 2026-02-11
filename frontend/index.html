@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning Brief</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Landing page (shown when not logged in) -->
+  <div class="landing">
+    <h1>Morning Brief</h1>
+    <p class="subtitle">Your personalized daily digest — weather, news, calendar &amp; a quote — delivered to Telegram every morning.</p>
+
+    <div class="features">
+      <div class="feature">
+        <span class="icon">&#9729;</span>
+        <div>
+          <h3>Weather</h3>
+          <p>Current conditions and forecast for your location.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="icon">&#9993;</span>
+        <div>
+          <h3>Local News</h3>
+          <p>Top headlines from your city, summarized for quick reading.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="icon">&#128197;</span>
+        <div>
+          <h3>Calendar</h3>
+          <p>Today's events from Google Calendar, so you never miss a meeting.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <span class="icon">&#10024;</span>
+        <div>
+          <h3>Daily Quote</h3>
+          <p>A motivational quote to start your day right.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="login-section">
+      <div id="telegram-login"></div>
+      <p>Log in with Telegram to get started</p>
+    </div>
+  </div>
+
+  <!-- After login (shown when logged in) -->
+  <div class="welcome">
+    <h2>Welcome, <span id="user-name"></span>!</h2>
+    <p>Let's set up your morning brief.</p>
+    <a href="/onboarding.html" class="btn">Set up my brief</a>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

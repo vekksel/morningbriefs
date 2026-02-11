@@ -1,0 +1,147 @@
+.onboarding {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.onboarding h1 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.onboarding .subtitle {
+  color: var(--text-muted);
+  margin-bottom: 40px;
+}
+
+/* Steps */
+
+.step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.step-number {
+  background: var(--accent);
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.step h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.step-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+/* Inputs */
+
+input[type="text"],
+input[type="time"] {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+
+input[type="text"]:focus,
+input[type="time"]:focus {
+  border-color: var(--accent);
+}
+
+.city-input-row,
+.time-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.city-input-row input {
+  flex: 1;
+}
+
+.btn-sm {
+  padding: 10px 20px;
+  font-size: 0.9rem;
+}
+
+.divider-text {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 14px 0;
+}
+
+/* Result boxes */
+
+.result-box {
+  background: rgba(46, 166, 255, 0.1);
+  border: 1px solid rgba(46, 166, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkmark {
+  color: #4caf50;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.status-msg {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 10px;
+}
+
+.status-msg.error {
+  color: #e57373;
+}
+
+/* Done */
+
+.done-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.done-box h2 {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.done-box p {
+  color: var(--text-muted);
+}

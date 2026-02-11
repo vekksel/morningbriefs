@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning Brief — Настройка</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/onboarding.css">
+</head>
+<body>
+
+  <div class="onboarding">
+    <h1>Настройка</h1>
+    <p class="subtitle">Три быстрых шага — и ваш утренний брифинг готов.</p>
+
+    <!-- Step 1: Location -->
+    <div class="step" id="step-1">
+      <div class="step-header">
+        <span class="step-number">1</span>
+        <h2>Местоположение</h2>
+      </div>
+      <p class="step-desc">Нужно для прогноза погоды и местных новостей.</p>
+
+      <button class="btn" id="btn-detect" onclick="detectLocation()">
+        Определить автоматически
+      </button>
+
+      <div id="detect-status" class="status-msg hidden"></div>
+
+      <div class="divider-text">или введите город вручную</div>
+
+      <div class="city-input-row">
+        <input type="text" id="city-input" placeholder="Например: Москва" />
+        <button class="btn btn-sm" onclick="manualCity()">OK</button>
+      </div>
+
+      <div id="location-result" class="result-box hidden">
+        <span id="location-text"></span>
+        <span class="checkmark">&#10003;</span>
+      </div>
+    </div>
+
+    <!-- Step 2: Send time -->
+    <div class="step" id="step-2">
+      <div class="step-header">
+        <span class="step-number">2</span>
+        <h2>Время отправки</h2>
+      </div>
+      <p class="step-desc">Во сколько присылать утренний брифинг?</p>
+
+      <div class="time-row">
+        <input type="time" id="send-time" value="07:00" />
+        <button class="btn btn-sm" onclick="saveTime()">Сохранить</button>
+      </div>
+
+      <div id="time-result" class="result-box hidden">
+        <span id="time-text"></span>
+        <span class="checkmark">&#10003;</span>
+      </div>
+    </div>
+
+    <!-- Step 3: Connect bot -->
+    <div class="step" id="step-3">
+      <div class="step-header">
+        <span class="step-number">3</span>
+        <h2>Подключить бота</h2>
+      </div>
+      <p class="step-desc">Откройте бота в Telegram и нажмите Start, чтобы он мог отправлять вам сообщения.</p>
+
+      <a id="bot-link" class="btn" href="#" target="_blank">
+        Открыть бота в Telegram
+      </a>
+
+      <div id="bot-status" class="status-msg">
+        Ожидание... (нажмите Start в Telegram)
+      </div>
+
+      <div id="bot-result" class="result-box hidden">
+        <span>Бот подключён</span>
+        <span class="checkmark">&#10003;</span>
+      </div>
+    </div>
+
+    <!-- Done -->
+    <div id="done-section" class="hidden">
+      <div class="done-box">
+        <h2>Готово!</h2>
+        <p>Ваш первый брифинг придёт завтра в <strong id="done-time"></strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/onboarding.js"></script>
+</body>
+</html>
