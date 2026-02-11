@@ -35,7 +35,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "http://localhost:3000/api/n8n/users/due",
+        "url": "https://brief.rusvet.online/api/n8n/users/due",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -326,7 +326,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://localhost:3000/api/n8n/users/{{ $('Prepare Brief Data').first().json.userId }}/brief-sent",
+        "url": "=https://brief.rusvet.online/api/n8n/users/{{ $('Prepare Brief Data').first().json.userId }}/brief-sent",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}

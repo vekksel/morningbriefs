@@ -26,9 +26,14 @@ router.get('/users/due', n8nAuth, (req, res) => {
       AND timezone IS NOT NULL
   `).all();
 
+  // ?test=true skips time filter (for manual testing / "Test bot" button)
+  const skipTimeFilter = req.query.test === 'true';
+
   // Filter: keep only users whose send_time matches current time in their timezone
   // AND whose brief hasn't already been sent today (prevents duplicate sends)
   const dueUsers = users.filter(user => {
+    if (skipTimeFilter) return true;
+
     try {
       const now = new Date();
       const userTime = now.toLocaleTimeString('en-GB', {
