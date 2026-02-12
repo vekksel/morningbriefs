@@ -1,4 +1,5 @@
 const express = require('express');
+const { google } = require('googleapis');
 const db = require('./database');
 
 const router = express.Router();
@@ -112,6 +113,78 @@ router.post('/users/:id/brief-sent', n8nAuth, (req, res) => {
   db.prepare('UPDATE users SET last_brief_date = ? WHERE id = ?').run(todayInUserTz, user.id);
 
   res.json({ ok: true, date: todayInUserTz });
+});
+
+// GET /api/n8n/users/:id/calendar-events — today's Google Calendar events
+router.get('/users/:id/calendar-events', n8nAuth, async (req, res) => {
+  const user = db.prepare('SELECT google_refresh_token, timezone FROM users WHERE id = ?')
+    .get(req.params.id);
+
+  if (!user || !user.google_refresh_token) {
+    return res.json({ events: [] });
+  }
+
+  try {
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI
+    );
+    oauth2Client.setCredentials({ refresh_token: user.google_refresh_token });
+
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    // Build today's start/end in user's timezone
+    const tz = user.timezone || 'UTC';
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-CA', { timeZone: tz }); // "YYYY-MM-DD"
+
+    // Calculate UTC offset for user's timezone
+    const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const tzDate = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+    const offsetMin = Math.round((tzDate - utcDate) / 60000);
+    const sign = offsetMin >= 0 ? '+' : '-';
+    const absH = String(Math.floor(Math.abs(offsetMin) / 60)).padStart(2, '0');
+    const absM = String(Math.abs(offsetMin) % 60).padStart(2, '0');
+    const offsetStr = `${sign}${absH}:${absM}`;
+
+    const timeMin = `${dateStr}T00:00:00${offsetStr}`;
+    const timeMax = `${dateStr}T23:59:59${offsetStr}`;
+
+    const response = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin,
+      timeMax,
+      timeZone: tz,
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 20,
+    });
+
+    const events = (response.data.items || []).map(ev => {
+      const isAllDay = !!ev.start.date;
+      return {
+        title: ev.summary || '(no title)',
+        startTime: isAllDay ? ev.start.date : ev.start.dateTime,
+        endTime: isAllDay ? ev.end.date : ev.end.dateTime,
+        location: ev.location || null,
+        isAllDay,
+      };
+    });
+
+    res.json({ events });
+  } catch (err) {
+    // If token is revoked or expired, clear it and return empty
+    if (err.code === 401 || err.code === 403 ||
+        (err.response && (err.response.status === 401 || err.response.status === 403))) {
+      console.log(`Clearing revoked Google token for user ${req.params.id}`);
+      db.prepare('UPDATE users SET google_refresh_token = NULL WHERE id = ?')
+        .run(req.params.id);
+    } else {
+      console.error('Calendar API error:', err.message);
+    }
+    res.json({ events: [] });
+  }
 });
 
 module.exports = router;

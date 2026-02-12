@@ -11,7 +11,7 @@
 
   <div class="onboarding">
     <h1>Настройка</h1>
-    <p class="subtitle">Три быстрых шага — и ваш утренний брифинг готов.</p>
+    <p class="subtitle">Быстрая настройка — и ваш утренний брифинг готов.</p>
 
     <!-- Step 1: Location -->
     <div class="step" id="step-1">
@@ -77,6 +77,28 @@
 
       <div id="bot-result" class="result-box hidden">
         <span>Бот подключён</span>
+        <span class="checkmark">&#10003;</span>
+      </div>
+    </div>
+
+    <!-- Step 4: Google Calendar (optional) -->
+    <div class="step" id="step-4">
+      <div class="step-header">
+        <span class="step-number">4</span>
+        <h2>Google Календарь</h2>
+        <span class="optional-badge">необязательно</span>
+      </div>
+      <p class="step-desc">Подключите календарь, чтобы в брифинге были ваши события на сегодня.</p>
+
+      <a id="calendar-link" class="btn" href="#">
+        Подключить Google Календарь
+      </a>
+      <a href="#" class="skip-link" onclick="skipCalendar(); return false;">
+        Пропустить
+      </a>
+
+      <div id="calendar-result" class="result-box hidden">
+        <span id="calendar-text"></span>
         <span class="checkmark">&#10003;</span>
       </div>
     </div>

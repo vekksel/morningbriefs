@@ -126,6 +126,33 @@ input[type="time"]:focus {
   color: #e57373;
 }
 
+/* Optional badge */
+
+.optional-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  padding: 2px 10px;
+  border-radius: 12px;
+  margin-left: auto;
+}
+
+/* Skip link */
+
+.skip-link {
+  display: inline-block;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-left: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.skip-link:hover {
+  color: var(--text);
+}
+
 /* Done */
 
 .done-box {

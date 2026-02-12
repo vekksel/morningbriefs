@@ -28,6 +28,7 @@ if (!getToken()) {
 let locationDone = false;
 let timeDone = false;
 let botDone = false;
+let calendarDone = false;
 
 const prefs = {
   city: null,
@@ -171,8 +172,70 @@ async function savePrefs() {
   checkAllDone();
 }
 
+// ---- Step 4: Google Calendar (optional) ----
+
+function initCalendarStep() {
+  const user = getUser();
+  const token = getToken();
+  if (!token) return;
+
+  // Set connect button URL
+  const link = document.getElementById('calendar-link');
+  link.href = `${API}/api/auth/google?token=${token}`;
+
+  // Check URL params (returning from Google OAuth)
+  const params = new URLSearchParams(window.location.search);
+  const calendarStatus = params.get('calendar');
+
+  if (calendarStatus === 'connected') {
+    onCalendarConnected();
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  if (calendarStatus === 'denied') {
+    skipCalendar('Доступ отклонён');
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  if (calendarStatus === 'error') {
+    skipCalendar('Ошибка подключения');
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  // If already connected (returning user), show result
+  if (user && user.hasCalendar) {
+    onCalendarConnected();
+  }
+}
+
+function onCalendarConnected() {
+  const resultBox = document.getElementById('calendar-result');
+  document.getElementById('calendar-text').textContent = 'Календарь подключён';
+  resultBox.classList.remove('hidden');
+  document.getElementById('calendar-link').classList.add('hidden');
+  const skipLink = document.querySelector('#step-4 .skip-link');
+  if (skipLink) skipLink.classList.add('hidden');
+  calendarDone = true;
+  checkAllDone();
+}
+
+function skipCalendar(text) {
+  const resultBox = document.getElementById('calendar-result');
+  document.getElementById('calendar-text').textContent = text || 'Пропущено';
+  resultBox.classList.remove('hidden');
+  document.getElementById('calendar-link').classList.add('hidden');
+  const skipLink = document.querySelector('#step-4 .skip-link');
+  if (skipLink) skipLink.classList.add('hidden');
+  calendarDone = true;
+  checkAllDone();
+}
+
 function checkAllDone() {
-  if (locationDone && timeDone && botDone) {
+  if (locationDone && timeDone && botDone && calendarDone) {
     document.getElementById('done-section').classList.remove('hidden');
     document.getElementById('done-time').textContent = prefs.sendTime;
   }
@@ -180,3 +243,4 @@ function checkAllDone() {
 
 // ---- Init ----
 initBotStep();
+initCalendarStep();

@@ -7,6 +7,7 @@ const db = require('./database');
 const authRouter = require('./auth');
 const userRouter = require('./users');
 const n8nRouter = require('./n8n');
+const googleRouter = require('./google');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,7 @@ app.get('/api/config', (req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRouter);
+app.use('/api/auth/google', googleRouter);
 
 // User routes
 app.use('/api/user', userRouter);
