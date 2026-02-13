@@ -187,4 +187,63 @@ router.get('/users/:id/calendar-events', n8nAuth, async (req, res) => {
   }
 });
 
+// ---- Cached proxies (same city = 1 API call per 30 min) ----
+
+const weatherCache = {};
+const newsCache = {};
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+// GET /api/n8n/weather?lat=X&lon=Y — cached OpenWeatherMap proxy
+router.get('/weather', n8nAuth, async (req, res) => {
+  const { lat, lon } = req.query;
+  if (!lat || !lon) return res.status(400).json({ error: 'lat and lon required' });
+
+  const key = `${lat},${lon}`;
+  const now = Date.now();
+
+  if (weatherCache[key] && (now - weatherCache[key].ts) < CACHE_TTL) {
+    return res.json(weatherCache[key].data);
+  }
+
+  try {
+    const apiKey = process.env.OPENWEATHERMAP_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'OPENWEATHERMAP_API_KEY not set' });
+
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&cnt=3&lang=ru&appid=${apiKey}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    weatherCache[key] = { data, ts: now };
+    res.json(data);
+  } catch (e) {
+    console.error('Weather proxy error:', e.message);
+    res.status(502).json({ error: 'Weather fetch failed' });
+  }
+});
+
+// GET /api/n8n/news?city=X — cached Google News RSS proxy
+router.get('/news', n8nAuth, async (req, res) => {
+  const { city } = req.query;
+  if (!city) return res.status(400).json({ error: 'city required' });
+
+  const key = city.toLowerCase();
+  const now = Date.now();
+
+  if (newsCache[key] && (now - newsCache[key].ts) < CACHE_TTL) {
+    return res.type('text/xml').send(newsCache[key].data);
+  }
+
+  try {
+    const url = `https://news.google.com/rss/search?q=${encodeURIComponent(city)}&hl=ru-RU&gl=RU&ceid=RU:ru`;
+    const response = await fetch(url);
+    const text = await response.text();
+
+    newsCache[key] = { data: text, ts: now };
+    res.type('text/xml').send(text);
+  } catch (e) {
+    console.error('News proxy error:', e.message);
+    res.status(502).json({ error: 'News fetch failed' });
+  }
+});
+
 module.exports = router;

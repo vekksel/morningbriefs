@@ -181,9 +181,9 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://api.openweathermap.org/data/2.5/forecast?lat={{ $('User Config').first().json.lat }}&lon={{ $('User Config').first().json.lon }}&units=metric&cnt=5&lang=ru",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "httpQueryAuth",
+        "url": "=https://brief.rusvet.online/api/n8n/weather?lat={{ $('User Config').first().json.lat }}&lon={{ $('User Config').first().json.lon }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
       "id": "a0000001-0001-0001-0001-000000000008",
@@ -192,17 +192,17 @@
       "position": [720, 200],
       "typeVersion": 4.2,
       "credentials": {
-        "httpQueryAuth": {
-          "id": "jsQp3o3c6bbBjSGa",
-          "name": "Openweathermap"
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HEADER_AUTH_CREDENTIAL",
+          "name": "Morning Brief API Key"
         }
       },
       "notesInFlow": true,
-      "notes": "Uses existing OpenWeatherMap credential (httpQueryAuth appends appid). After import, re-select 'Openweathermap' credential if needed."
+      "notes": "Weather via backend cache proxy (same city = 1 API call per 30 min). Uses X-API-Key auth."
     },
     {
       "parameters": {
-        "jsCode": "// Format weather data into a readable summary\nconst weather = $input.first().json;\nconst city = $('User Config').first().json.city;\n\nconst current = weather.list?.[0];\nconst later = weather.list?.[2]; // ~6h later\n\nif (!current) {\n  return [{ json: { weatherText: 'Нет данных о погоде.' } }];\n}\n\nconst temp = Math.round(current.main.temp);\nconst feelsLike = Math.round(current.main.feels_like);\nconst desc = current.weather[0].description;\nconst wind = Math.round(current.wind.speed);\nconst humidity = current.main.humidity;\n\nlet laterTemp = '';\nif (later) {\n  laterTemp = `Позже до ${Math.round(later.main.temp)}°C.`;\n}\n\nconst weatherText = `Сейчас ${temp}°C (ощущается ${feelsLike}°C), ${desc}. ${laterTemp}\\nВетер ${wind} м/с, влажность ${humidity}%.`;\n\nreturn [{ json: { weatherText, city } }];"
+        "jsCode": "// Structure weather data for LLM — no hardcoded advice\nconst weather = $input.first().json;\nconst city = $('User Config').first().json.city;\nconst list = weather.list || [];\n\nif (list.length === 0) {\n  return [{ json: { weatherText: 'Нет данных о погоде.', city } }];\n}\n\nconst tzOffset = weather.city?.timezone || 0;\nfunction toLocal(dtTxt) {\n  const utc = new Date(dtTxt.replace(' ', 'T') + 'Z');\n  const h = new Date(utc.getTime() + tzOffset * 1000);\n  return h.toISOString().substring(11, 16);\n}\n\nconst lines = list.map((item, i) => {\n  const t = Math.round(item.main.temp);\n  const fl = Math.round(item.main.feels_like);\n  const desc = item.weather[0].description;\n  const w = Math.round(item.wind.speed);\n  const pop = Math.round((item.pop || 0) * 100);\n  const snow = item.snow ? ` Снег: ${item.snow['3h']}мм` : '';\n  const rain = item.rain ? ` Дождь: ${item.rain['3h']}мм` : '';\n  return `${toLocal(item.dt_txt)}: ${t}°C (ощущ. ${fl}°C), ${desc}, ветер ${w} м/с, осадки ${pop}%${snow}${rain}`;\n});\n\nconst weatherText = `Город: ${city}\\n${lines.join('\\n')}`;\n\nreturn [{ json: { weatherText, city } }];"
       },
       "id": "a0000001-0001-0001-0001-000000000009",
       "name": "Format Weather",
@@ -213,8 +213,9 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://news.google.com/rss/search?q={{ encodeURIComponent($('User Config').first().json.city) }}&hl=ru-RU&gl=RU&ceid=RU:ru",
-        "authentication": "none",
+        "url": "=https://brief.rusvet.online/api/n8n/news?city={{ encodeURIComponent($('User Config').first().json.city) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "options": {
           "response": {
             "response": {
@@ -227,11 +228,17 @@
       "name": "Get News RSS",
       "type": "n8n-nodes-base.httpRequest",
       "position": [720, 400],
-      "typeVersion": 4.2
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HEADER_AUTH_CREDENTIAL",
+          "name": "Morning Brief API Key"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Parse RSS XML and filter to last 24 hours, limit 5 headlines\nconst xml = $input.first().json.data || $input.first().json.body || $input.first().json;\nlet text = '';\nif (typeof xml === 'string') {\n  text = xml;\n} else if (xml.data) {\n  text = xml.data;\n} else {\n  text = JSON.stringify(xml);\n}\n\n// Simple XML parsing for RSS items\nconst items = [];\nconst itemRegex = /<item>(.*?)<\\/item>/gs;\nlet match;\nwhile ((match = itemRegex.exec(text)) !== null) {\n  const itemXml = match[1];\n  \n  const titleMatch = itemXml.match(/<title>(.*?)<\\/title>/);\n  const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\\/pubDate>/);\n  const sourceMatch = itemXml.match(/<source[^>]*>(.*?)<\\/source>/);\n  \n  if (titleMatch) {\n    const title = titleMatch[1].replace(/<!\\[CDATA\\[(.*?)\\]\\]>/g, '$1').trim();\n    const pubDate = pubDateMatch ? new Date(pubDateMatch[1]) : null;\n    const source = sourceMatch ? sourceMatch[1].replace(/<!\\[CDATA\\[(.*?)\\]\\]>/g, '$1').trim() : '';\n    \n    items.push({ title, pubDate, source });\n  }\n}\n\n// Filter to last 24 hours\nconst now = new Date();\nconst oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\nconst recentItems = items.filter(item => {\n  if (!item.pubDate) return true; // include items without date\n  return item.pubDate >= oneDayAgo;\n});\n\n// Take top 5\nconst top5 = recentItems.slice(0, 5);\n\nconst headlines = top5.map(item => {\n  const src = item.source ? ` (${item.source})` : '';\n  return `• ${item.title}${src}`;\n}).join('\\n');\n\nconst newsText = top5.length > 0 ? headlines : 'Нет свежих новостей.';\n\nreturn [{ json: { newsText, newsCount: top5.length } }];"
+        "jsCode": "// Parse RSS XML and filter to last 24 hours, limit 5 headlines\nconst xml = $input.first().json.data || $input.first().json.body || $input.first().json;\nlet text = '';\nif (typeof xml === 'string') {\n  text = xml;\n} else if (xml.data) {\n  text = xml.data;\n} else {\n  text = JSON.stringify(xml);\n}\n\n// Simple XML parsing for RSS items\nconst items = [];\nconst itemRegex = /<item>(.*?)<\\/item>/gs;\nlet match;\nwhile ((match = itemRegex.exec(text)) !== null) {\n  const itemXml = match[1];\n  \n  const titleMatch = itemXml.match(/<title>(.*?)<\\/title>/);\n  const pubDateMatch = itemXml.match(/<pubDate>(.*?)<\\/pubDate>/);\n  const sourceMatch = itemXml.match(/<source[^>]*>(.*?)<\\/source>/);\n  \n  if (titleMatch) {\n    const title = titleMatch[1].replace(/<!\\[CDATA\\[(.*?)\\]\\]>/g, '$1').trim();\n    const pubDate = pubDateMatch ? new Date(pubDateMatch[1]) : null;\n    const source = sourceMatch ? sourceMatch[1].replace(/<!\\[CDATA\\[(.*?)\\]\\]>/g, '$1').trim() : '';\n    \n    items.push({ title, pubDate, source });\n  }\n}\n\n// Filter to last 24 hours\nconst now = new Date();\nconst oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);\nconst recentItems = items.filter(item => {\n  if (!item.pubDate) return true; // include items without date\n  return item.pubDate >= oneDayAgo;\n});\n\n// Take top 3\nconst top5 = recentItems.slice(0, 3);\n\nconst headlines = top5.map(item => {\n  const src = item.source ? ` (${item.source})` : '';\n  return `• ${item.title}${src}`;\n}).join('\\n');\n\nconst newsText = top5.length > 0 ? headlines : 'Нет свежих новостей.';\n\nreturn [{ json: { newsText, newsCount: top5.length } }];"
       },
       "id": "a0000001-0001-0001-0001-000000000011",
       "name": "Parse & Filter News",
@@ -308,7 +315,7 @@
         "promptType": "define",
         "text": "=Составь утренний брифинг для пользователя на основе этих данных:\n\nИмя: {{ $json.telegramName }}\nГород: {{ $json.city }}\nВремя: {{ $json.userTime }}\n\nПОГОДА:\n{{ $json.weatherText }}\n\nНОВОСТИ:\n{{ $json.newsText }}\n\nКАЛЕНДАРЬ:\n{{ $json.calendarText || 'Нет событий' }}\n\nЦИТАТА:\n«{{ $json.quoteText }}» — {{ $json.quoteAuthor }}",
         "options": {
-          "systemMessage": "Ты составляешь утренний брифинг в виде Telegram-сообщения. Формат: HTML разметка для Telegram (используй <b>, <i>, но НЕ используй <h1>, <p>, <div> — только инлайн-теги).\n\nСтрого следуй этому шаблону:\n\n<b>Доброе утро, {имя}!</b>\n📍 {город} • {время}\n\n🌤 <b>Погода</b>\n{погода — 2-3 строки, кратко}\n\n📰 <b>Новости</b>\n{список новостей — перечисли буллетами •}\n\n📅 <b>Сегодня в календаре</b>\n{список событий — если есть, если пусто или 'Нет событий' — пропусти этот раздел целиком}\n\n💬 <b>Мысль дня</b>\n«{цитата}»\n— {автор}\n\nПравила:\n- Пиши ТОЛЬКО на русском языке\n- Будь краток и дружелюбен\n- Не добавляй ничего лишнего — только погоду, новости, календарь (если есть) и цитату\n- Если в разделе КАЛЕНДАРЬ написано 'Нет событий' или пусто — НЕ включай раздел календаря в сообщение\n- Не используй Markdown — только HTML-теги для Telegram\n- НЕ оборачивай ответ в кодовый блок или ```\n- Верни ТОЛЬКО готовое сообщение, без объяснений"
+          "systemMessage": "Ты составляешь утренний брифинг в виде Telegram-сообщения. Формат: HTML разметка для Telegram (используй <b>, <i>, но НЕ используй <h1>, <p>, <div> — только инлайн-теги).\n\nСтрого следуй этому шаблону:\n\n<b>Доброе утро, {имя}!</b>\n📍 {город} • {время}\n\n🌤 <b>Погода</b>\n{краткая сводка: текущая температура, ощущается как, условия, мин/макс за день}\n{практический совет: что надеть, брать ли зонт/куртку, учитывай сезон и условия}\n\n📰 <b>Новости</b>\n{список новостей — перечисли буллетами •}\n\n📅 <b>Сегодня в календаре</b>\n{список событий — если есть, если пусто или 'Нет событий' — пропусти этот раздел целиком}\n\n💬 <b>Мысль дня</b>\n«{цитата}»\n— {автор}\n\nПравила:\n- Пиши ТОЛЬКО на русском языке\n- Будь краток и дружелюбен\n- В разделе ПОГОДА: кратко опиши текущую погоду и прогноз на день (2-3 строки). Добавь один практический совет — что надеть или взять с собой, учитывая температуру, осадки, ветер и время года. Не повторяй сырые данные — перескажи человеческим языком.\n- Не добавляй ничего лишнего — только погоду, новости, календарь (если есть) и цитату\n- Если в разделе КАЛЕНДАРЬ написано 'Нет событий' или пусто — НЕ включай раздел календаря в сообщение\n- Не используй Markdown — только HTML-теги для Telegram\n- НЕ оборачивай ответ в кодовый блок или ```\n- Верни ТОЛЬКО готовое сообщение, без объяснений"
         }
       },
       "id": "a0000001-0001-0001-0001-000000000015",
