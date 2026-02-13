@@ -180,6 +180,31 @@ body {
   margin-top: 36px;
 }
 
+.btn-telegram {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #229ED9;
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+  margin-bottom: 12px;
+}
+
+.btn-telegram:hover {
+  background: #1a8ac2;
+  transform: translateY(-1px);
+}
+
+.btn-telegram-icon {
+  flex-shrink: 0;
+}
+
 .hero-hint {
   font-size: 0.85rem;
   color: var(--text-muted);
