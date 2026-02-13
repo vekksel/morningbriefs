@@ -40,60 +40,122 @@ const prefs = {
 
 // ---- Step 1: Location ----
 
+let citiesList = [];
+
+async function loadCities() {
+  try {
+    const res = await fetch(`${API}/api/cities`);
+    citiesList = await res.json();
+  } catch (e) {
+    console.error('Failed to load cities:', e);
+  }
+}
+
+function selectCity(city) {
+  prefs.city = city.name_ru;
+  prefs.lat = city.lat;
+  prefs.lon = city.lon;
+  prefs.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  document.getElementById('city-input').value = city.name_ru;
+  document.getElementById('city-dropdown').classList.add('hidden');
+  showLocationResult(city.name_ru);
+}
+
+function initAutocomplete() {
+  const input = document.getElementById('city-input');
+  const dropdown = document.getElementById('city-dropdown');
+
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase();
+    if (query.length < 2) {
+      dropdown.classList.add('hidden');
+      return;
+    }
+
+    const matches = citiesList
+      .filter(c => c.name_ru.toLowerCase().startsWith(query))
+      .slice(0, 8);
+
+    if (matches.length === 0) {
+      dropdown.classList.add('hidden');
+      return;
+    }
+
+    dropdown.innerHTML = '';
+    matches.forEach(city => {
+      const item = document.createElement('div');
+      item.className = 'city-dropdown-item';
+      item.textContent = city.name_ru;
+      item.addEventListener('click', () => selectCity(city));
+      dropdown.appendChild(item);
+    });
+    dropdown.classList.remove('hidden');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.city-autocomplete')) {
+      dropdown.classList.add('hidden');
+    }
+  });
+}
+
+// Haversine distance in km
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function findNearestCity(lat, lon) {
+  let nearest = null;
+  let minDist = Infinity;
+  for (const city of citiesList) {
+    const dist = haversineDistance(lat, lon, city.lat, city.lon);
+    if (dist < minDist) {
+      minDist = dist;
+      nearest = city;
+    }
+  }
+  return nearest;
+}
+
 async function detectLocation() {
   const status = document.getElementById('detect-status');
   status.classList.remove('hidden', 'error');
   status.textContent = 'Определяем...';
 
   if (!navigator.geolocation) {
-    status.textContent = 'Геолокация не поддерживается в этом браузере. Введите город вручную.';
+    status.textContent = 'Геолокация не поддерживается. Выберите город из списка.';
     status.classList.add('error');
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      prefs.lat = Math.round(pos.coords.latitude * 10000) / 10000;
-      prefs.lon = Math.round(pos.coords.longitude * 10000) / 10000;
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const nearest = findNearestCity(lat, lon);
 
-      // Reverse geocode via OpenStreetMap Nominatim (free, no API key)
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${prefs.lat}&lon=${prefs.lon}&format=json&accept-language=ru`
-        );
-        const data = await res.json();
-        const addr = data.address || {};
-        prefs.city = addr.city || addr.town || addr.village || addr.state || 'Unknown';
-      } catch {
-        prefs.city = `${prefs.lat}, ${prefs.lon}`;
+      if (nearest) {
+        status.classList.add('hidden');
+        selectCity(nearest);
+      } else {
+        status.textContent = 'Не удалось определить город. Выберите из списка.';
+        status.classList.add('error');
       }
-
-      // Detect timezone from coordinates
-      prefs.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-      status.classList.add('hidden');
-      showLocationResult(prefs.city);
     },
-    (err) => {
-      status.textContent = 'Не удалось определить. Введите город вручную.';
+    () => {
+      status.textContent = 'Не удалось определить. Выберите город из списка.';
       status.classList.add('error');
     },
     { timeout: 10000 }
   );
-}
-
-async function manualCity() {
-  const input = document.getElementById('city-input');
-  const city = input.value.trim();
-  if (!city) return;
-
-  prefs.city = city;
-  prefs.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  // lat/lon will be looked up by n8n using city name
-  prefs.lat = null;
-  prefs.lon = null;
-
-  showLocationResult(city);
 }
 
 function showLocationResult(city) {
@@ -242,5 +304,6 @@ function checkAllDone() {
 }
 
 // ---- Init ----
+loadCities().then(() => initAutocomplete());
 initBotStep();
 initCalendarStep();

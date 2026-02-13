@@ -74,15 +74,10 @@ input[type="time"]:focus {
   border-color: var(--accent);
 }
 
-.city-input-row,
 .time-row {
   display: flex;
   gap: 10px;
   align-items: center;
-}
-
-.city-input-row input {
-  flex: 1;
 }
 
 .btn-sm {
@@ -95,6 +90,41 @@ input[type="time"]:focus {
   font-size: 0.85rem;
   text-align: center;
   margin: 14px 0;
+}
+
+/* City autocomplete */
+
+.city-autocomplete {
+  position: relative;
+}
+
+.city-autocomplete input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.city-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.city-dropdown-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.city-dropdown-item:hover {
+  background: rgba(46, 166, 255, 0.15);
 }
 
 /* Result boxes */

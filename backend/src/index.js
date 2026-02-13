@@ -8,6 +8,7 @@ const authRouter = require('./auth');
 const userRouter = require('./users');
 const n8nRouter = require('./n8n');
 const googleRouter = require('./google');
+const citiesRouter = require('./cities');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,9 @@ app.use('/api/auth/google', googleRouter);
 
 // User routes
 app.use('/api/user', userRouter);
+
+// Cities list (public)
+app.use('/api/cities', citiesRouter);
 
 // n8n-facing routes (API key auth)
 app.use('/api/n8n', n8nRouter);

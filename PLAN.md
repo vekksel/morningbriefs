@@ -184,6 +184,58 @@ Cron (every minute)
 
 ---
 
+### Stage 8 — Fine-Tuning & Optimization
+**Goal:** Improve scheduling efficiency, UX, weather/news quality, and multi-user scalability.
+
+#### 8.1 — n8n Scheduling: Morning-Only Window
+**Status:** Not started
+**Problem:** Workflow runs every 1 min × 24 hours = 1440 idle executions/day.
+**Solution:** Change Schedule Trigger cron to `* 4-11 * * *` (04:00–12:00 UTC). Covers 07:00–15:00 Moscow through 11:00–19:00 Vladivostok. Reduces to ~480 executions/day (67% reduction).
+
+#### 8.2 — Cities Table + Autocomplete Location Selector
+**Status:** Not started
+**Problem:** Text input for city allows typos, no coordinate lookup. lat/lon not saved during onboarding (known bug).
+**Solution:**
+- Create `cities` table in SQLite: `name_ru`, `name_en`, `lat`, `lon` (loaded from `references/coordinates.csv`, ~300 cities)
+- Frontend: replace text input with autocomplete search (type 2–3 letters → filtered dropdown)
+- Keep "Detect my location" button (Geolocation API → match nearest city from list)
+- On city select → auto-fill lat/lon in user record (fixes the lat/lon bug)
+- Serve cities list as JSON to frontend (~15KB)
+
+#### 8.3 — Weather Forecast Expansion + Clothing Advice
+**Status:** Not started
+**Problem:** Currently shows only current weather. OpenWeatherMap returns 5 forecast items per day (every 3 hours).
+**Solution:**
+- Show: current temp + conditions, day high/low (min/max from 3-hour forecasts)
+- Key weather changes: "rain expected after 15:00", "clearing up by evening"
+- Practical advice (in n8n Code node, simple if/else):
+  - Rain probability > 50% → "Возьмите зонт" (Take an umbrella)
+  - Temp < 0°C → "Одевайтесь теплее" (Bundle up)
+  - Wind > 10 m/s → "Сильный ветер" (Strong wind)
+  - Big temp swing (>10°C) → "Одевайтесь слоями" (Dress in layers)
+
+#### 8.4 — Location-Filtered News
+**Status:** Not started
+**Problem:** Google News returns 5 most recent items — arbitrary, often irrelevant.
+**Solution (MVP):**
+- Add user's city to Google News search query → location-relevant results
+- Reduce from 5 to 3 items (morning brief = concise)
+- Future: LLM-based ranking/summarization (paid feature, adds cost + latency)
+
+#### 8.5 — Multi-User Scalability: Weather/News Caching per City
+**Status:** Not started
+**Problem:** If 10 users are in Moscow, n8n makes 10 identical weather + news API calls.
+**Solution:**
+- Cache weather and news responses per city within a single workflow execution run
+- In n8n: before API call, check if city was already fetched → reuse cached result
+- Biggest performance win: N users in same city = 1 API call instead of N
+
+#### 8.6 — Google Calendar: Leave as Optional
+**Status:** Parked (decision made)
+**Decision:** Too many permissions for new users. Leave as optional feature. Revisit if users request it.
+
+---
+
 ## What's NOT in MVP (future / paid version)
 
 - Audio podcast version (multi-speaker TTS)
@@ -202,9 +254,10 @@ Cron (every minute)
 | Stage 2 — Landing + TG Login | **DONE** | Landing page, TG widget, auth endpoint, JWT |
 | Stage 3 — Onboarding | **DONE** | Location, time picker, bot connect, prefs API |
 | Stage 4 — Telegram Bot | **DONE** | /start handler, welcome msg, DB update |
-| Stage 5 — Google Calendar | Not started | |
+| Stage 5 — Google Calendar | **DONE** | OAuth flow deployed, calendar connected |
 | Stage 6 — n8n Workflow (Text MVP) | **DONE** | Importable JSON generated, backend API updated |
 | Stage 7 — Settings Page | Not started | |
+| Stage 8 — Fine-Tuning | Not started | See details below |
 
 ---
 

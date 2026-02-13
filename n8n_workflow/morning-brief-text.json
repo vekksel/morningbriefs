@@ -251,7 +251,41 @@
     },
     {
       "parameters": {
-        "numberInputs": 3
+        "method": "GET",
+        "url": "=https://brief.rusvet.online/api/n8n/users/{{ $('User Config').first().json.userId }}/calendar-events",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "options": {}
+      },
+      "id": "a0000001-0001-0001-0001-000000000021",
+      "name": "Get Calendar Events",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [720, 800],
+      "typeVersion": 4.2,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_HEADER_AUTH_CREDENTIAL",
+          "name": "Morning Brief API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format calendar events into readable text\nconst events = $input.first().json.events || [];\n\nif (events.length === 0) {\n  return [{ json: { calendarText: '' } }];\n}\n\nconst lines = events.map(ev => {\n  if (ev.isAllDay) {\n    return `• ${ev.title} (весь день)`;\n  }\n  // Extract HH:MM from datetime string\n  const start = ev.startTime ? ev.startTime.substring(11, 16) : '';\n  const end = ev.endTime ? ev.endTime.substring(11, 16) : '';\n  let line = `• ${start}–${end} ${ev.title}`;\n  if (ev.location) line += ` (${ev.location})`;\n  return line;\n});\n\nconst calendarText = lines.join('\\n');\nreturn [{ json: { calendarText } }];"
+      },
+      "id": "a0000001-0001-0001-0001-000000000022",
+      "name": "Format Calendar",
+      "type": "n8n-nodes-base.code",
+      "position": [960, 800],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
       },
       "id": "a0000001-0001-0001-0001-000000000013",
       "name": "Merge",
@@ -261,7 +295,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Combine all data into a single prompt for the AI\nconst items = $input.all();\nconst weather = items.find(i => i.json.weatherText) || { json: { weatherText: 'Нет данных.', city: '' } };\nconst news = items.find(i => i.json.newsText) || { json: { newsText: 'Нет новостей.' } };\nconst quote = items.find(i => i.json.quoteText) || { json: { quoteText: 'Действуй!', quoteAuthor: '' } };\n\nconst userConfig = $('User Config').first().json;\n\n// Get current time in user's timezone\nconst now = new Date();\nlet userTimeStr = '';\ntry {\n  userTimeStr = now.toLocaleTimeString('ru-RU', {\n    timeZone: userConfig.timezone,\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false\n  });\n} catch(e) {\n  userTimeStr = userConfig.sendTime || '07:00';\n}\n\nreturn [{\n  json: {\n    telegramId: userConfig.telegramId,\n    telegramName: userConfig.telegramName,\n    userId: userConfig.userId,\n    city: userConfig.city || weather.json.city,\n    timezone: userConfig.timezone,\n    userTime: userTimeStr,\n    weatherText: weather.json.weatherText,\n    newsText: news.json.newsText,\n    quoteText: quote.json.quoteText,\n    quoteAuthor: quote.json.quoteAuthor\n  }\n}];"
+        "jsCode": "// Combine all data into a single prompt for the AI\nconst items = $input.all();\nconst weather = items.find(i => i.json.weatherText) || { json: { weatherText: 'Нет данных.', city: '' } };\nconst news = items.find(i => i.json.newsText) || { json: { newsText: 'Нет новостей.' } };\nconst quote = items.find(i => i.json.quoteText) || { json: { quoteText: 'Действуй!', quoteAuthor: '' } };\nconst calendar = items.find(i => i.json.calendarText !== undefined) || { json: { calendarText: '' } };\n\nconst userConfig = $('User Config').first().json;\n\n// Get current time in user's timezone\nconst now = new Date();\nlet userTimeStr = '';\ntry {\n  userTimeStr = now.toLocaleTimeString('ru-RU', {\n    timeZone: userConfig.timezone,\n    hour: '2-digit',\n    minute: '2-digit',\n    hour12: false\n  });\n} catch(e) {\n  userTimeStr = userConfig.sendTime || '07:00';\n}\n\nreturn [{\n  json: {\n    telegramId: userConfig.telegramId,\n    telegramName: userConfig.telegramName,\n    userId: userConfig.userId,\n    city: userConfig.city || weather.json.city,\n    timezone: userConfig.timezone,\n    userTime: userTimeStr,\n    weatherText: weather.json.weatherText,\n    newsText: news.json.newsText,\n    quoteText: quote.json.quoteText,\n    quoteAuthor: quote.json.quoteAuthor,\n    calendarText: calendar.json.calendarText\n  }\n}];"
       },
       "id": "a0000001-0001-0001-0001-000000000014",
       "name": "Prepare Brief Data",
@@ -272,9 +306,9 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=Составь утренний брифинг для пользователя на основе этих данных:\n\nИмя: {{ $json.telegramName }}\nГород: {{ $json.city }}\nВремя: {{ $json.userTime }}\n\nПОГОДА:\n{{ $json.weatherText }}\n\nНОВОСТИ:\n{{ $json.newsText }}\n\nЦИТАТА:\n«{{ $json.quoteText }}» — {{ $json.quoteAuthor }}",
+        "text": "=Составь утренний брифинг для пользователя на основе этих данных:\n\nИмя: {{ $json.telegramName }}\nГород: {{ $json.city }}\nВремя: {{ $json.userTime }}\n\nПОГОДА:\n{{ $json.weatherText }}\n\nНОВОСТИ:\n{{ $json.newsText }}\n\nКАЛЕНДАРЬ:\n{{ $json.calendarText || 'Нет событий' }}\n\nЦИТАТА:\n«{{ $json.quoteText }}» — {{ $json.quoteAuthor }}",
         "options": {
-          "systemMessage": "Ты составляешь утренний брифинг в виде Telegram-сообщения. Формат: HTML разметка для Telegram (используй <b>, <i>, но НЕ используй <h1>, <p>, <div> — только инлайн-теги).\n\nСтрого следуй этому шаблону:\n\n<b>Доброе утро, {имя}!</b>\n📍 {город} • {время}\n\n🌤 <b>Погода</b>\n{погода — 2-3 строки, кратко}\n\n📰 <b>Новости</b>\n{список новостей — перечисли буллетами •}\n\n💬 <b>Мысль дня</b>\n«{цитата}»\n— {автор}\n\nПравила:\n- Пиши ТОЛЬКО на русском языке\n- Будь краток и дружелюбен\n- Не добавляй ничего лишнего — только погоду, новости и цитату\n- Не используй Markdown — только HTML-теги для Telegram\n- НЕ оборачивай ответ в кодовый блок или ```\n- Верни ТОЛЬКО готовое сообщение, без объяснений"
+          "systemMessage": "Ты составляешь утренний брифинг в виде Telegram-сообщения. Формат: HTML разметка для Telegram (используй <b>, <i>, но НЕ используй <h1>, <p>, <div> — только инлайн-теги).\n\nСтрого следуй этому шаблону:\n\n<b>Доброе утро, {имя}!</b>\n📍 {город} • {время}\n\n🌤 <b>Погода</b>\n{погода — 2-3 строки, кратко}\n\n📰 <b>Новости</b>\n{список новостей — перечисли буллетами •}\n\n📅 <b>Сегодня в календаре</b>\n{список событий — если есть, если пусто или 'Нет событий' — пропусти этот раздел целиком}\n\n💬 <b>Мысль дня</b>\n«{цитата}»\n— {автор}\n\nПравила:\n- Пиши ТОЛЬКО на русском языке\n- Будь краток и дружелюбен\n- Не добавляй ничего лишнего — только погоду, новости, календарь (если есть) и цитату\n- Если в разделе КАЛЕНДАРЬ написано 'Нет событий' или пусто — НЕ включай раздел календаря в сообщение\n- Не используй Markdown — только HTML-теги для Telegram\n- НЕ оборачивай ответ в кодовый блок или ```\n- Верни ТОЛЬКО готовое сообщение, без объяснений"
         }
       },
       "id": "a0000001-0001-0001-0001-000000000015",
@@ -460,6 +494,33 @@
             "node": "Get Quote",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Get Calendar Events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Calendar Events": {
+      "main": [
+        [
+          {
+            "node": "Format Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Calendar": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
           }
         ]
       ]
