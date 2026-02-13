@@ -103,6 +103,17 @@ router.get('/users/:id', n8nAuth, (req, res) => {
   });
 });
 
+// POST /api/n8n/users/:id/deactivate — mark user as unsubscribed (bot blocked)
+router.post('/users/:id/deactivate', n8nAuth, (req, res) => {
+  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  db.prepare('UPDATE users SET is_bot_started = 0 WHERE id = ?').run(user.id);
+
+  console.log(`User ${user.id} deactivated (bot blocked)`);
+  res.json({ ok: true });
+});
+
 // POST /api/n8n/users/:id/brief-sent — mark that today's brief was sent
 router.post('/users/:id/brief-sent', n8nAuth, (req, res) => {
   const user = db.prepare('SELECT id, timezone FROM users WHERE id = ?').get(req.params.id);
