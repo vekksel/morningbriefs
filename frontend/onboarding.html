@@ -4,113 +4,161 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Morning Brief — Настройка</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/onboarding.css">
 </head>
 <body>
 
+  <!-- NAV (same as landing) -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span class="nav-logo-icon">☀</span>
+        Утренний бриф
+      </a>
+      <div class="nav-links">
+        <a href="/onboarding.html">Настройки</a>
+      </div>
+    </div>
+  </nav>
+
   <div class="onboarding">
-    <h1>Настройка</h1>
-    <p class="subtitle">Быстрая настройка — и ваш утренний брифинг готов.</p>
+    <div class="onboarding-header">
+      <h1>Настройка</h1>
+      <p class="subtitle">Быстрая настройка — и ваш утренний брифинг готов.</p>
+    </div>
 
     <!-- Step 1: Location -->
-    <div class="step" id="step-1">
-      <div class="step-header">
-        <span class="step-number">1</span>
-        <h2>Местоположение</h2>
+    <div class="ob-card" id="step-1">
+      <div class="ob-card-header">
+        <span class="ob-step-num">1</span>
+        <div>
+          <h2 class="ob-card-title">Местоположение</h2>
+          <p class="ob-card-desc">Нужно для прогноза погоды и местных новостей.</p>
+        </div>
       </div>
-      <p class="step-desc">Нужно для прогноза погоды и местных новостей.</p>
+      <div class="ob-card-body">
+        <button class="ob-btn" id="btn-detect" onclick="detectLocation()">
+          Определить автоматически
+        </button>
 
-      <button class="btn" id="btn-detect" onclick="detectLocation()">
-        Определить автоматически
-      </button>
+        <div id="detect-status" class="ob-status hidden"></div>
 
-      <div id="detect-status" class="status-msg hidden"></div>
+        <div class="ob-divider">или выберите город</div>
 
-      <div class="divider-text">или выберите город</div>
+        <div class="city-autocomplete">
+          <input type="text" id="city-input" class="ob-input" placeholder="Начните вводить название..." autocomplete="off" />
+          <div id="city-dropdown" class="city-dropdown hidden"></div>
+        </div>
 
-      <div class="city-autocomplete">
-        <input type="text" id="city-input" placeholder="Начните вводить название..." autocomplete="off" />
-        <div id="city-dropdown" class="city-dropdown hidden"></div>
-      </div>
-
-      <div id="location-result" class="result-box hidden">
-        <span id="location-text"></span>
-        <span class="checkmark">&#10003;</span>
+        <div id="location-result" class="ob-result hidden">
+          <span id="location-text"></span>
+          <span class="ob-check">&#10003;</span>
+        </div>
       </div>
     </div>
 
     <!-- Step 2: Send time -->
-    <div class="step" id="step-2">
-      <div class="step-header">
-        <span class="step-number">2</span>
-        <h2>Время отправки</h2>
+    <div class="ob-card" id="step-2">
+      <div class="ob-card-header">
+        <span class="ob-step-num">2</span>
+        <div>
+          <h2 class="ob-card-title">Время отправки</h2>
+          <p class="ob-card-desc">Во сколько присылать утренний брифинг?</p>
+        </div>
       </div>
-      <p class="step-desc">Во сколько присылать утренний брифинг?</p>
+      <div class="ob-card-body">
+        <div class="ob-time-row">
+          <input type="time" id="send-time" class="ob-input ob-input-time" value="07:00" />
+          <button class="ob-btn ob-btn-sm" onclick="saveTime()">Сохранить</button>
+        </div>
 
-      <div class="time-row">
-        <input type="time" id="send-time" value="07:00" />
-        <button class="btn btn-sm" onclick="saveTime()">Сохранить</button>
-      </div>
-
-      <div id="time-result" class="result-box hidden">
-        <span id="time-text"></span>
-        <span class="checkmark">&#10003;</span>
+        <div id="time-result" class="ob-result hidden">
+          <span id="time-text"></span>
+          <span class="ob-check">&#10003;</span>
+        </div>
       </div>
     </div>
 
     <!-- Step 3: Connect bot -->
-    <div class="step" id="step-3">
-      <div class="step-header">
-        <span class="step-number">3</span>
-        <h2>Подключить бота</h2>
+    <div class="ob-card" id="step-3">
+      <div class="ob-card-header">
+        <span class="ob-step-num">3</span>
+        <div>
+          <h2 class="ob-card-title">Подключить бота</h2>
+          <p class="ob-card-desc">Откройте бота в Telegram и нажмите Start.</p>
+        </div>
       </div>
-      <p class="step-desc">Откройте бота в Telegram и нажмите Start, чтобы он мог отправлять вам сообщения.</p>
+      <div class="ob-card-body">
+        <a id="bot-link" class="ob-btn ob-btn-telegram" href="#" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.03-1.99 1.27-5.62 3.72-.53.36-1.01.54-1.44.53-.47-.01-1.38-.27-2.06-.49-.83-.27-1.49-.42-1.43-.88.03-.24.37-.49 1.02-.75 3.98-1.73 6.64-2.88 7.97-3.44 3.8-1.58 4.59-1.86 5.1-1.87.11 0 .37.03.54.17.14.12.18.28.2.45-.01.06.01.24 0 .37z"/></svg>
+          Открыть бота в Telegram
+        </a>
 
-      <a id="bot-link" class="btn" href="#" target="_blank">
-        Открыть бота в Telegram
-      </a>
+        <div id="bot-status" class="ob-status">
+          Ожидание... (нажмите Start в Telegram)
+        </div>
 
-      <div id="bot-status" class="status-msg">
-        Ожидание... (нажмите Start в Telegram)
-      </div>
-
-      <div id="bot-result" class="result-box hidden">
-        <span>Бот подключён</span>
-        <span class="checkmark">&#10003;</span>
+        <div id="bot-result" class="ob-result hidden">
+          <span>Бот подключён</span>
+          <span class="ob-check">&#10003;</span>
+        </div>
       </div>
     </div>
 
     <!-- Step 4: Google Calendar (optional) -->
-    <div class="step" id="step-4">
-      <div class="step-header">
-        <span class="step-number">4</span>
-        <h2>Google Календарь</h2>
-        <span class="optional-badge">необязательно</span>
+    <div class="ob-card" id="step-4">
+      <div class="ob-card-header">
+        <span class="ob-step-num">4</span>
+        <div>
+          <h2 class="ob-card-title">Google Календарь</h2>
+          <p class="ob-card-desc">Подключите календарь, чтобы в брифинге были ваши события.</p>
+        </div>
+        <span class="ob-badge">необязательно</span>
       </div>
-      <p class="step-desc">Подключите календарь, чтобы в брифинге были ваши события на сегодня.</p>
+      <div class="ob-card-body">
+        <div class="ob-btn-row">
+          <a id="calendar-link" class="ob-btn" href="#">
+            Подключить Google Календарь
+          </a>
+          <a href="#" class="ob-skip" onclick="skipCalendar(); return false;">
+            Пропустить
+          </a>
+        </div>
 
-      <a id="calendar-link" class="btn" href="#">
-        Подключить Google Календарь
-      </a>
-      <a href="#" class="skip-link" onclick="skipCalendar(); return false;">
-        Пропустить
-      </a>
-
-      <div id="calendar-result" class="result-box hidden">
-        <span id="calendar-text"></span>
-        <span class="checkmark">&#10003;</span>
+        <div id="calendar-result" class="ob-result hidden">
+          <span id="calendar-text"></span>
+          <span class="ob-check">&#10003;</span>
+        </div>
       </div>
     </div>
 
-    <!-- Done -->
+    <!-- Done section -->
     <div id="done-section" class="hidden">
-      <div class="done-box">
+      <div class="ob-done">
+        <div class="ob-done-icon">&#10003;</div>
         <h2>Готово!</h2>
         <p>Ваш первый брифинг придёт завтра в <strong id="done-time"></strong>.</p>
+        <p class="ob-done-hint">Или проверьте прямо сейчас:</p>
+        <button class="ob-btn ob-btn-test" id="btn-test-brief" onclick="sendTestBrief()">
+          Отправить тестовый бриф
+        </button>
+        <div id="test-brief-status" class="ob-status hidden"></div>
       </div>
     </div>
+
   </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo">☀ Утренний бриф</span>
+      <span class="footer-copy">© 2026</span>
+    </div>
+  </footer>
 
   <script src="/js/onboarding.js"></script>
 </body>

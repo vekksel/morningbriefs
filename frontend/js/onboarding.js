@@ -158,12 +158,12 @@ async function detectLocation() {
   );
 }
 
-function showLocationResult(city) {
+function showLocationResult(city, skipSave) {
   const resultBox = document.getElementById('location-result');
   document.getElementById('location-text').textContent = city;
   resultBox.classList.remove('hidden');
   locationDone = true;
-  savePrefs();
+  if (!skipSave) savePrefs();
 }
 
 // ---- Step 2: Send time ----
@@ -279,7 +279,7 @@ function onCalendarConnected() {
   document.getElementById('calendar-text').textContent = 'Календарь подключён';
   resultBox.classList.remove('hidden');
   document.getElementById('calendar-link').classList.add('hidden');
-  const skipLink = document.querySelector('#step-4 .skip-link');
+  const skipLink = document.querySelector('#step-4 .ob-skip');
   if (skipLink) skipLink.classList.add('hidden');
   calendarDone = true;
   checkAllDone();
@@ -290,7 +290,7 @@ function skipCalendar(text) {
   document.getElementById('calendar-text').textContent = text || 'Пропущено';
   resultBox.classList.remove('hidden');
   document.getElementById('calendar-link').classList.add('hidden');
-  const skipLink = document.querySelector('#step-4 .skip-link');
+  const skipLink = document.querySelector('#step-4 .ob-skip');
   if (skipLink) skipLink.classList.add('hidden');
   calendarDone = true;
   checkAllDone();
@@ -303,7 +303,86 @@ function checkAllDone() {
   }
 }
 
+// ---- Test Brief ----
+
+async function sendTestBrief() {
+  const btn = document.getElementById('btn-test-brief');
+  const status = document.getElementById('test-brief-status');
+
+  btn.disabled = true;
+  btn.textContent = 'Отправляем...';
+  status.classList.remove('hidden', 'error', 'success');
+  status.textContent = '';
+
+  try {
+    const res = await fetch(`${API}/api/user/test-brief`, {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      status.textContent = 'Бриф отправлен! Проверьте Telegram через 20–30 секунд.';
+      status.classList.add('success');
+      btn.textContent = 'Отправлено!';
+      // Re-enable after 30 seconds to prevent spam
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = 'Отправить тестовый бриф';
+      }, 30000);
+    } else {
+      status.textContent = data.error || 'Ошибка отправки';
+      status.classList.add('error');
+      btn.disabled = false;
+      btn.textContent = 'Отправить тестовый бриф';
+    }
+  } catch (e) {
+    status.textContent = 'Не удалось связаться с сервером';
+    status.classList.add('error');
+    btn.disabled = false;
+    btn.textContent = 'Отправить тестовый бриф';
+  }
+}
+
+// ---- Load saved state on page reload ----
+
+async function loadSavedState() {
+  try {
+    const res = await fetch(`${API}/api/user`, { headers: authHeaders() });
+    if (!res.ok) return;
+    const user = await res.json();
+    localStorage.setItem('user', JSON.stringify(user));
+
+    // Restore location
+    if (user.city && user.lat && user.lon) {
+      prefs.city = user.city;
+      prefs.lat = user.lat;
+      prefs.lon = user.lon;
+      prefs.timezone = user.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      document.getElementById('city-input').value = user.city;
+      showLocationResult(user.city, true);
+    }
+
+    // Restore send time
+    if (user.sendTime) {
+      prefs.sendTime = user.sendTime;
+      document.getElementById('send-time').value = user.sendTime;
+      document.getElementById('time-result').classList.remove('hidden');
+      document.getElementById('time-text').textContent = `Каждый день в ${user.sendTime}`;
+      timeDone = true;
+    }
+
+    // Bot and calendar are handled by initBotStep / initCalendarStep
+    // but we need to check done after they run
+    checkAllDone();
+  } catch (e) {
+    console.error('Failed to load saved state:', e);
+  }
+}
+
 // ---- Init ----
 loadCities().then(() => initAutocomplete());
 initBotStep();
 initCalendarStep();
+loadSavedState();

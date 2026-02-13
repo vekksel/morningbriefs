@@ -32,16 +32,44 @@ bot.onText(/\/start/, (msg) => {
     db.prepare('UPDATE users SET is_bot_started = 1 WHERE telegram_id = ?').run(telegramId);
 
     const time = user.send_time || '07:00';
-    bot.sendMessage(chatId,
-      `Привет, ${name}! Бот подключён.\n\n` +
-      `Ваш утренний брифинг будет приходить каждый день в ${time}.\n\n` +
-      `Можете вернуться на сайт — там появится зелёная галочка.`
-    );
+    const needsSetup = !user.city || !user.send_time;
+
+    if (needsSetup) {
+      bot.sendMessage(chatId,
+        `Привет, ${name}! Бот подключён ✅\n\n` +
+        `Осталось настроить город и время — это займёт минуту.`,
+        {
+          reply_markup: {
+            inline_keyboard: [[
+              { text: '⚙️ Настроить бриф', url: 'https://brief.rusvet.online/onboarding.html' }
+            ]]
+          }
+        }
+      );
+    } else {
+      bot.sendMessage(chatId,
+        `Привет, ${name}! Бот подключён ✅\n\n` +
+        `Ваш утренний брифинг будет приходить каждый день в ${time}.`,
+        {
+          reply_markup: {
+            inline_keyboard: [[
+              { text: '⚙️ Настройки', url: 'https://brief.rusvet.online/onboarding.html' }
+            ]]
+          }
+        }
+      );
+    }
   } else {
     // User hasn't registered via web app yet
     bot.sendMessage(chatId,
-      `Привет, ${name}! Чтобы начать, зарегистрируйтесь на сайте Morning Brief, ` +
-      `а потом вернитесь сюда и нажмите /start ещё раз.`
+      `Привет, ${name}! Чтобы начать, зарегистрируйтесь на сайте.`,
+      {
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '📝 Регистрация', url: 'https://brief.rusvet.online' }
+          ]]
+        }
+      }
     );
   }
 });
@@ -51,6 +79,13 @@ bot.on('message', (msg) => {
   if (msg.text && msg.text.startsWith('/start')) return; // already handled above
 
   bot.sendMessage(msg.chat.id,
-    'Я отправляю утренние брифинги автоматически. Управлять настройками можно на сайте.'
+    'Я отправляю утренние брифинги автоматически. Настройки — по кнопке ниже.',
+    {
+      reply_markup: {
+        inline_keyboard: [[
+          { text: '⚙️ Настройки', url: 'https://brief.rusvet.online/onboarding.html' }
+        ]]
+      }
+    }
   );
 });

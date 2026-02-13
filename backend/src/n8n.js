@@ -28,11 +28,15 @@ router.get('/users/due', n8nAuth, (req, res) => {
   `).all();
 
   // ?test=true skips time filter (for manual testing / "Test bot" button)
+  // ?userId=X filters to a single user (for per-user test brief)
   const skipTimeFilter = req.query.test === 'true';
+  const filterUserId = req.query.userId ? parseInt(req.query.userId, 10) : null;
 
   // Filter: keep only users whose send_time matches current time in their timezone
   // AND whose brief hasn't already been sent today (prevents duplicate sends)
   const dueUsers = users.filter(user => {
+    // Per-user test: only return the requested user
+    if (filterUserId) return user.id === filterUserId;
     if (skipTimeFilter) return true;
 
     try {
