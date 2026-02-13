@@ -56,6 +56,63 @@ function showLoggedIn(user) {
   document.getElementById('user-name').textContent = user.telegramName || 'there';
 }
 
+// ---- Load Telegram widget into a container ----
+
+function loadTelegramWidget(container, botUsername) {
+  const script = document.createElement('script');
+  script.src = 'https://telegram.org/js/telegram-widget.js?22';
+  script.setAttribute('data-telegram-login', botUsername);
+  script.setAttribute('data-size', 'large');
+  script.setAttribute('data-radius', '10');
+  script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+  script.setAttribute('data-request-access', 'write');
+  container.appendChild(script);
+}
+
+function loadDevButton(container) {
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = 'Test Login (dev mode)';
+  btn.onclick = async () => {
+    const r = await fetch(`${API}/api/auth/dev`, { method: 'POST' });
+    const data = await r.json();
+    saveAuth(data.token, data.user);
+    showLoggedIn(data.user);
+  };
+  container.appendChild(btn);
+
+  const note = document.createElement('p');
+  note.style.cssText = 'color:#E8720C;font-size:0.8rem;margin-top:8px;';
+  note.textContent = 'Dev mode — real Telegram Login will work after deploying to your domain';
+  container.appendChild(note);
+}
+
+// ---- Scroll animations ----
+
+function initScrollAnimations() {
+  const sections = document.querySelectorAll('.section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('fade-in');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  sections.forEach(section => {
+    section.style.opacity = '0';
+    section.style.transform = 'translateY(24px)';
+    section.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+    observer.observe(section);
+  });
+
+  // Add the fade-in style dynamically
+  const style = document.createElement('style');
+  style.textContent = '.fade-in { opacity: 1 !important; transform: translateY(0) !important; }';
+  document.head.appendChild(style);
+}
+
 // ---- On page load ----
 
 async function init() {
@@ -71,39 +128,33 @@ async function init() {
     const res = await fetch(`${API}/api/config`);
     const config = await res.json();
 
-    const container = document.getElementById('telegram-login');
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    // On localhost, Telegram widget won't work (needs real domain).
-    // Show a dev test login button instead.
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      const btn = document.createElement('button');
-      btn.className = 'btn';
-      btn.textContent = 'Test Login (dev mode)';
-      btn.onclick = async () => {
-        const r = await fetch(`${API}/api/auth/dev`, { method: 'POST' });
-        const data = await r.json();
-        saveAuth(data.token, data.user);
-        showLoggedIn(data.user);
-      };
-      container.appendChild(btn);
+    // Hero login widget
+    const heroContainer = document.getElementById('telegram-login');
+    if (heroContainer) {
+      if (isDev) {
+        loadDevButton(heroContainer);
+      } else {
+        loadTelegramWidget(heroContainer, config.botUsername);
+      }
+    }
 
-      const note = document.createElement('p');
-      note.style.cssText = 'color:#f0ad4e;font-size:0.8rem;margin-top:8px;';
-      note.textContent = 'Dev mode — real Telegram Login will work after deploying to your domain';
-      container.appendChild(note);
-    } else {
-      const script = document.createElement('script');
-      script.src = 'https://telegram.org/js/telegram-widget.js?22';
-      script.setAttribute('data-telegram-login', config.botUsername);
-      script.setAttribute('data-size', 'large');
-      script.setAttribute('data-radius', '10');
-      script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-      script.setAttribute('data-request-access', 'write');
-      container.appendChild(script);
+    // Bottom CTA login widget
+    const bottomContainer = document.getElementById('telegram-login-bottom');
+    if (bottomContainer) {
+      if (isDev) {
+        loadDevButton(bottomContainer);
+      } else {
+        loadTelegramWidget(bottomContainer, config.botUsername);
+      }
     }
   } catch (e) {
     console.error('Failed to load config:', e);
   }
+
+  // Initialize scroll animations
+  initScrollAnimations();
 }
 
 init();

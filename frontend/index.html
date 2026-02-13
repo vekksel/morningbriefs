@@ -1,60 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Morning Brief</title>
+  <title>Утренний бриф — погода, новости и календарь в Telegram</title>
+  <meta name="description" content="Каждое утро получай персональный бриф в Telegram: погода, новости твоего города, события из календаря и мотивирующая цитата.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
-  <!-- Landing page (shown when not logged in) -->
+  <!-- ===== LANDING PAGE (shown when not logged in) ===== -->
   <div class="landing">
-    <h1>Morning Brief</h1>
-    <p class="subtitle">Your personalized daily digest — weather, news, calendar &amp; a quote — delivered to Telegram every morning.</p>
 
-    <div class="features">
-      <div class="feature">
-        <span class="icon">&#9729;</span>
-        <div>
-          <h3>Weather</h3>
-          <p>Current conditions and forecast for your location.</p>
+    <!-- NAV -->
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">
+          <span class="nav-logo-icon">☀</span>
+          Утренний бриф
+        </a>
+        <div class="nav-links">
+          <a href="#how">Как работает</a>
+          <a href="#features">Возможности</a>
+          <a href="#faq">FAQ</a>
         </div>
       </div>
-      <div class="feature">
-        <span class="icon">&#9993;</span>
-        <div>
-          <h3>Local News</h3>
-          <p>Top headlines from your city, summarized for quick reading.</p>
-        </div>
-      </div>
-      <div class="feature">
-        <span class="icon">&#128197;</span>
-        <div>
-          <h3>Calendar</h3>
-          <p>Today's events from Google Calendar, so you never miss a meeting.</p>
-        </div>
-      </div>
-      <div class="feature">
-        <span class="icon">&#10024;</span>
-        <div>
-          <h3>Daily Quote</h3>
-          <p>A motivational quote to start your day right.</p>
-        </div>
-      </div>
-    </div>
+    </nav>
 
-    <div class="login-section">
-      <div id="telegram-login"></div>
-      <p>Log in with Telegram to get started</p>
-    </div>
-  </div>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          Начинай день<br>с&nbsp;<span class="hero-accent">ясности</span>
+        </h1>
+        <p class="hero-subtitle">
+          Каждое утро в Telegram ты получаешь всё важное — в одном сообщении.
+        </p>
+        <ul class="hero-list">
+          <li><span class="hero-list-icon">🌤</span> Погоду в твоём городе</li>
+          <li><span class="hero-list-icon">📰</span> Главные новости</li>
+          <li><span class="hero-list-icon">📅</span> События из календаря</li>
+          <li><span class="hero-list-icon">💬</span> Мотивирующую цитату</li>
+        </ul>
+        <div class="hero-cta">
+          <div id="telegram-login"></div>
+          <p class="hero-hint">Регистрация занимает 30 секунд</p>
+        </div>
+      </div>
+      <div class="hero-phone">
+        <img src="/img/phone.png" alt="Утренний бриф в Telegram" class="hero-phone-img">
+      </div>
+    </section>
 
-  <!-- After login (shown when logged in) -->
+    <!-- HOW IT WORKS -->
+    <section class="section section--light" id="how">
+      <div class="section-inner">
+        <p class="section-label">Как это работает</p>
+        <h2 class="section-title">Всего 3 шага</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3 class="step-title">Регистрация через Telegram</h3>
+            <p class="step-desc">Нажимаешь кнопку — бот открывается автоматически.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3 class="step-title">Указываешь город</h3>
+            <p class="step-desc">Мы будем присылать погоду и локальные новости.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3 class="step-title">Выбираешь время</h3>
+            <p class="step-desc">Получай бриф тогда, когда тебе удобно — хоть в 6:30, хоть в 9:00.</p>
+          </div>
+        </div>
+        <p class="steps-footnote">Со следующего утра ты уже получишь свой первый бриф.</p>
+      </div>
+    </section>
+
+    <!-- WHAT'S INSIDE -->
+    <section class="section" id="features">
+      <div class="section-inner">
+        <p class="section-label">Что внутри</p>
+        <h2 class="section-title">Один экран — вся картина дня</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🌤</div>
+            <h3>Погода</h3>
+            <p>Температура, осадки, ощущается как, короткий совет что надеть.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📰</div>
+            <h3>Новости города</h3>
+            <p>Главные события и важные обновления твоего региона.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📅</div>
+            <h3>Твои дела на сегодня</h3>
+            <p>Список встреч и задач из Google Calendar.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💬</div>
+            <h3>Мотивирующая цитата</h3>
+            <p>Небольшой импульс, чтобы начать день правильно.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CALENDAR INTEGRATION -->
+    <section class="section section--light">
+      <div class="section-inner section-split">
+        <div class="section-split-text">
+          <p class="section-label">Google Calendar</p>
+          <h2 class="section-title section-title--left">Подключи календарь — и бриф станет персональным</h2>
+          <p class="section-body">
+            Опционально можно подключить Google Calendar. Тогда в утреннем сообщении появятся встречи, созвоны, напоминания и важные события.
+          </p>
+          <p class="section-body section-body--muted">Без ручного ввода. Всё автоматически.</p>
+        </div>
+        <div class="section-split-visual calendar-visual">
+          <div class="calendar-card">
+            <div class="calendar-card-header">
+              <span>📅</span> Сегодня в календаре
+            </div>
+            <div class="calendar-card-item">
+              <span class="calendar-time">09:00</span>
+              <span>Стендап с командой</span>
+            </div>
+            <div class="calendar-card-item">
+              <span class="calendar-time">11:30</span>
+              <span>Созвон с клиентом</span>
+            </div>
+            <div class="calendar-card-item">
+              <span class="calendar-time">14:00</span>
+              <span>Обзор спринта</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROBLEM / SOLUTION -->
+    <section class="section">
+      <div class="section-inner">
+        <div class="problem-solution">
+          <div class="problem-block">
+            <p class="section-label section-label--problem">Проблема</p>
+            <h3>Утро начинается с хаоса</h3>
+            <ul class="problem-list">
+              <li>Хаотичный скроллинг ленты</li>
+              <li>Погода — в одном приложении</li>
+              <li>Новости — в другом</li>
+              <li>Календарь — в третьем</li>
+            </ul>
+            <p class="problem-result">Много переключений → потеря фокуса</p>
+          </div>
+          <div class="solution-block">
+            <p class="section-label section-label--solution">Решение</p>
+            <h3>Одно сообщение. Одна минута.</h3>
+            <p class="solution-tagline">Полная ясность.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHO IT'S FOR -->
+    <section class="section section--light">
+      <div class="section-inner">
+        <p class="section-label">Для кого</p>
+        <h2 class="section-title">Если утром ты открываешь 5 приложений — тебе нужен бриф</h2>
+        <div class="audience-grid">
+          <div class="audience-card">
+            <span class="audience-emoji">🧑‍💼</span>
+            <p>Для предпринимателей</p>
+          </div>
+          <div class="audience-card">
+            <span class="audience-emoji">👨‍💻</span>
+            <p>Для удалёнщиков</p>
+          </div>
+          <div class="audience-card">
+            <span class="audience-emoji">🎓</span>
+            <p>Для студентов</p>
+          </div>
+          <div class="audience-card">
+            <span class="audience-emoji">🧠</span>
+            <p>Для тех, кто ценит структуру</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADVANTAGES -->
+    <section class="section">
+      <div class="section-inner">
+        <p class="section-label">Преимущества</p>
+        <h2 class="section-title">Почему Утренний бриф</h2>
+        <div class="advantages">
+          <div class="advantage">
+            <span class="advantage-icon">⚡</span>
+            <div>
+              <h4>Быстро</h4>
+              <p>Читается за 30–60 секунд</p>
+            </div>
+          </div>
+          <div class="advantage">
+            <span class="advantage-icon">📲</span>
+            <div>
+              <h4>Без приложений</h4>
+              <p>Работает прямо в Telegram</p>
+            </div>
+          </div>
+          <div class="advantage">
+            <span class="advantage-icon">🔒</span>
+            <div>
+              <h4>Безопасно</h4>
+              <p>Авторизация через Telegram</p>
+            </div>
+          </div>
+          <div class="advantage">
+            <span class="advantage-icon">🧩</span>
+            <div>
+              <h4>Гибко</h4>
+              <p>Можно менять город и время</p>
+            </div>
+          </div>
+          <div class="advantage">
+            <span class="advantage-icon">📅</span>
+            <div>
+              <h4>Интеграция</h4>
+              <p>Подключи Google Calendar</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="section section--cta">
+      <div class="section-inner">
+        <h2 class="cta-title">Начни завтрашний день иначе</h2>
+        <p class="cta-subtitle">Подключись сейчас — и уже завтра утром получишь свой первый бриф.</p>
+        <div class="cta-login">
+          <div id="telegram-login-bottom"></div>
+        </div>
+        <p class="cta-fine">Бесплатно. Отписаться можно в любой момент.</p>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section section--light" id="faq">
+      <div class="section-inner">
+        <p class="section-label">FAQ</p>
+        <h2 class="section-title">Частые вопросы</h2>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary>Это бесплатно?</summary>
+            <p>Да, базовая версия полностью бесплатна.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Можно изменить время отправки?</summary>
+            <p>Да, в настройках бота можно выбрать удобное время.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Можно сменить город?</summary>
+            <p>Да, в любой момент через настройки.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Какие данные вы храните?</summary>
+            <p>Только необходимые для формирования брифа: город, время отправки и Telegram ID.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-inner">
+        <span class="footer-logo">☀ Утренний бриф</span>
+        <span class="footer-copy">© 2026</span>
+      </div>
+    </footer>
+
+  </div><!-- /.landing -->
+
+  <!-- ===== AFTER LOGIN (shown when logged in) ===== -->
   <div class="welcome">
-    <h2>Welcome, <span id="user-name"></span>!</h2>
-    <p>Let's set up your morning brief.</p>
-    <a href="/onboarding.html" class="btn">Set up my brief</a>
+    <h2>Добро пожаловать, <span id="user-name"></span>!</h2>
+    <p>Давайте настроим ваш утренний бриф.</p>
+    <a href="/onboarding.html" class="btn-primary">Настроить бриф</a>
   </div>
 
   <script src="/js/app.js"></script>
