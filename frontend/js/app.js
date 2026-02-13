@@ -50,10 +50,7 @@ window.onTelegramAuth = async function (tgUser) {
 // ---- UI state ----
 
 function showLoggedIn(user) {
-  document.querySelector('.landing').classList.add('hidden');
-  const welcome = document.querySelector('.welcome');
-  welcome.classList.add('visible');
-  document.getElementById('user-name').textContent = user.telegramName || 'there';
+  window.location.href = '/onboarding.html';
 }
 
 // ---- Load Telegram widget into a container ----

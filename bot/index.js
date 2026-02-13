@@ -62,11 +62,11 @@ bot.onText(/\/start/, (msg) => {
   } else {
     // User hasn't registered via web app yet
     bot.sendMessage(chatId,
-      `Привет, ${name}! Чтобы начать, зарегистрируйтесь на сайте.`,
+      `Привет, ${name}! Чтобы получать утренние брифинги, войдите через Telegram на нашем сайте — это займёт пару секунд.`,
       {
         reply_markup: {
           inline_keyboard: [[
-            { text: '📝 Регистрация', url: 'https://brief.rusvet.online' }
+            { text: '🚀 Войти на сайте', url: 'https://brief.rusvet.online' }
           ]]
         }
       }
