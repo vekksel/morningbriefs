@@ -213,7 +213,10 @@ router.get('/weather', n8nAuth, async (req, res) => {
     const response = await fetch(url);
     const data = await response.json();
 
-    weatherCache[key] = { data, ts: now };
+    // Only cache successful responses (don't cache API errors)
+    if (data.cod === '200' || data.cod === 200) {
+      weatherCache[key] = { data, ts: now };
+    }
     res.json(data);
   } catch (e) {
     console.error('Weather proxy error:', e.message);
