@@ -25,6 +25,9 @@ router.get('/', authRequired, (req, res) => {
 
 // PUT /api/user/preferences — update location, time, etc.
 router.put('/preferences', authRequired, (req, res) => {
+  const existing = db.prepare('SELECT id FROM users WHERE id = ?').get(req.userId);
+  if (!existing) return res.status(404).json({ error: 'User not found' });
+
   const { city, lat, lon, timezone, sendTime } = req.body;
 
   const updates = [];

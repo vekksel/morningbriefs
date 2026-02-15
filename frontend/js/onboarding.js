@@ -30,6 +30,10 @@ async function handleTokenAuth() {
 
   if (urlToken) {
     try {
+      // Clear stale auth from previous session before exchanging new token
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
       const res = await fetch(`${API}/api/auth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,12 +58,16 @@ async function handleTokenAuth() {
   return false;
 }
 
-// Auth gate: try token first, then check localStorage, then redirect
+// Auth gate: URL token always wins (new bot link), then localStorage, then redirect
 async function ensureAuth() {
-  if (getToken()) return true;
+  // Always try URL token first — it may be a fresh bot link for a re-registered user
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('token')) {
+    const success = await handleTokenAuth();
+    if (success) return true;
+  }
 
-  const success = await handleTokenAuth();
-  if (success) return true;
+  if (getToken()) return true;
 
   // No auth at all — redirect to landing
   window.location.href = '/';
