@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const db = require('./database');
+const { consumeAuthToken } = require('./database');
 
 /**
  * Verify that login data actually came from Telegram.
@@ -82,6 +83,43 @@ router.post('/telegram', (req, res) => {
 
   res.json({
     token,
+    user: {
+      id: user.id,
+      telegramId: user.telegram_id,
+      telegramName: user.telegram_name,
+      city: user.city,
+      sendTime: user.send_time,
+      isBotStarted: !!user.is_bot_started,
+      hasCalendar: !!user.google_refresh_token,
+    },
+  });
+});
+
+// POST /api/auth/token — exchange one-time token for JWT (bot-first flow)
+router.post('/token', (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    return res.status(400).json({ error: 'Token required' });
+  }
+
+  const userId = consumeAuthToken(token);
+  if (!userId) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (!user) {
+    return res.status(401).json({ error: 'User not found' });
+  }
+
+  const jwtToken = jwt.sign(
+    { userId: user.id, telegramId: user.telegram_id },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+
+  res.json({
+    token: jwtToken,
     user: {
       id: user.id,
       telegramId: user.telegram_id,

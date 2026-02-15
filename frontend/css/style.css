@@ -628,6 +628,43 @@ body {
   color: #787870;
 }
 
+.cta-returning {
+  font-size: 0.85rem;
+  color: #787870;
+  margin-top: 12px;
+}
+
+.cta-returning a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.btn-telegram-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #229ED9;
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-telegram-cta:hover {
+  background: #1a8ac2;
+  transform: translateY(-1px);
+}
+
+.btn-telegram-cta svg {
+  flex-shrink: 0;
+}
+
 /* ---- FAQ ---- */
 
 .faq-list {

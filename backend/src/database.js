@@ -36,6 +36,14 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS auth_tokens (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at TEXT NOT NULL
+  )
+`);
+
 // Migration: add last_brief_date column (safe to run multiple times)
 const columns = db.prepare("PRAGMA table_info(users)").all();
 if (!columns.some(c => c.name === 'last_brief_date')) {
@@ -77,4 +85,21 @@ if (cityCount.count === 0) {
   }
 }
 
+// ---- Auth token helpers ----
+
+function createAuthToken(userId, token, expiresAt) {
+  // Clean up expired tokens
+  db.prepare("DELETE FROM auth_tokens WHERE expires_at < datetime('now')").run();
+  db.prepare('INSERT INTO auth_tokens (token, user_id, expires_at) VALUES (?, ?, ?)').run(token, userId, expiresAt);
+}
+
+function consumeAuthToken(token) {
+  const row = db.prepare("SELECT * FROM auth_tokens WHERE token = ? AND expires_at > datetime('now')").get(token);
+  if (!row) return null;
+  db.prepare('DELETE FROM auth_tokens WHERE token = ?').run(token);
+  return row.user_id;
+}
+
 module.exports = db;
+module.exports.createAuthToken = createAuthToken;
+module.exports.consumeAuthToken = consumeAuthToken;

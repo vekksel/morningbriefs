@@ -11,6 +11,11 @@ function getUser() {
   return u ? JSON.parse(u) : null;
 }
 
+function saveAuth(token, user) {
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+}
+
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -18,9 +23,47 @@ function authHeaders() {
   };
 }
 
-// Redirect to login if not authenticated
-if (!getToken()) {
+// Token-based auth: check URL for ?token= param (from bot link)
+async function handleTokenAuth() {
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+
+  if (urlToken) {
+    try {
+      const res = await fetch(`${API}/api/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: urlToken }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        saveAuth(data.token, data.user);
+        // Clean URL (remove token param, keep others like calendar)
+        params.delete('token');
+        const cleanSearch = params.toString();
+        const cleanUrl = window.location.pathname + (cleanSearch ? '?' + cleanSearch : '');
+        window.history.replaceState({}, '', cleanUrl);
+        return true;
+      }
+    } catch (e) {
+      console.error('Token auth failed:', e);
+    }
+  }
+
+  return false;
+}
+
+// Auth gate: try token first, then check localStorage, then redirect
+async function ensureAuth() {
+  if (getToken()) return true;
+
+  const success = await handleTokenAuth();
+  if (success) return true;
+
+  // No auth at all — redirect to landing
   window.location.href = '/';
+  return false;
 }
 
 // ---- State ----
@@ -382,7 +425,12 @@ async function loadSavedState() {
 }
 
 // ---- Init ----
-loadCities().then(() => initAutocomplete());
-initBotStep();
-initCalendarStep();
-loadSavedState();
+(async () => {
+  const authed = await ensureAuth();
+  if (!authed) return;
+
+  loadCities().then(() => initAutocomplete());
+  initBotStep();
+  initCalendarStep();
+  loadSavedState();
+})();
