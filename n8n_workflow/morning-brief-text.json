@@ -35,7 +35,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://brief.rusvet.online/api/n8n/users/due",
+        "url": "https://brief.aiiiru.com/api/n8n/users/due",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -181,7 +181,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://brief.rusvet.online/api/n8n/weather?lat={{ $('User Config').first().json.lat }}&lon={{ $('User Config').first().json.lon }}",
+        "url": "=https://brief.aiiiru.com/api/n8n/weather?lat={{ $('User Config').first().json.lat }}&lon={{ $('User Config').first().json.lon }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -213,7 +213,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://brief.rusvet.online/api/n8n/news?city={{ encodeURIComponent($('User Config').first().json.city) }}",
+        "url": "=https://brief.aiiiru.com/api/n8n/news?city={{ encodeURIComponent($('User Config').first().json.city) }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {
@@ -259,7 +259,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "=https://brief.rusvet.online/api/n8n/users/{{ $('User Config').first().json.userId }}/calendar-events",
+        "url": "=https://brief.aiiiru.com/api/n8n/users/{{ $('User Config').first().json.userId }}/calendar-events",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
@@ -367,7 +367,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://brief.rusvet.online/api/n8n/users/{{ $('Prepare Brief Data').first().json.userId }}/brief-sent",
+        "url": "=https://brief.aiiiru.com/api/n8n/users/{{ $('Prepare Brief Data').first().json.userId }}/brief-sent",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}

@@ -17,7 +17,7 @@ const db = new Database(dbPath);
 
 const bot = new TelegramBot(token, { polling: true });
 
-const BASE_URL = process.env.BASE_URL || 'https://brief.rusvet.online';
+const BASE_URL = process.env.BASE_URL || 'https://brief.aiiiru.com';
 
 console.log('Morning Brief Bot started (polling)...');
 
